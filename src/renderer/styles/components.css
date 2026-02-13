@@ -142,6 +142,29 @@
   border-color: var(--accent);
 }
 
+/* ── Filter Bar ── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 6px;
+  background: var(--bg-primary);
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.filter-checkbox input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
 /* ── List Container ── */
 .list-container {
   flex: 1;

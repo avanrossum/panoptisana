@@ -33,11 +33,22 @@ npm install
 npm run dev
 ```
 
+### Getting an Asana Personal Access Token
+
+Panorasana needs a Personal Access Token (PAT) — not an app client secret. To create one:
+
+1. Go to the [Asana Developer Console](https://app.asana.com/0/my-apps)
+2. Under **Personal access tokens**, click **Create new token**
+3. Give it a name (e.g. "Panorasana") and click **Create token**
+4. Copy the token (it starts with `1/`) — you won't be able to see it again
+
+The token is stored encrypted on your machine and is never sent anywhere except directly to Asana's API.
+
 ### Setup
 
 1. Launch Panorasana (it appears as a menu bar icon)
 2. Click the gear icon or right-click the tray icon to open Settings
-3. Enter your Asana Personal Access Token and click Verify
+3. Paste your Personal Access Token and click **Verify**
 4. Select yourself from the "I am" dropdown
 5. Optionally check "Show only my tasks" or select specific users
 

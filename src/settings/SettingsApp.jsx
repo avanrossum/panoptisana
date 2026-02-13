@@ -185,7 +185,7 @@ export default function SettingsApp() {
       <div className="settings-content">
         {/* ── API Key ── */}
         <div className="settings-section">
-          <div className="settings-section-title">Asana API Key</div>
+          <div className="settings-section-title">Asana Personal Access Token</div>
           {isApiKeySet ? (
             <div>
               <div className="form-row">
@@ -213,6 +213,13 @@ export default function SettingsApp() {
                   {apiKeyStatus.message}
                 </div>
               )}
+              <div className="api-key-hint">
+                Not an app secret.{' '}
+                <a href="#" onClick={(e) => { e.preventDefault(); window.open('https://app.asana.com/0/my-apps', '_blank'); }}>
+                  Create a Personal Access Token
+                </a>
+                {' '}&rarr; starts with 1/
+              </div>
             </div>
           )}
         </div>

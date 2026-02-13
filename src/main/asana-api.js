@@ -21,6 +21,8 @@ class AsanaAPI {
     if (!apiKey) throw new Error('No API key configured');
 
     const url = `${BASE_URL}${endpoint}`;
+    console.log('[asana-api] Fetching:', endpoint, '| key length:', apiKey.length);
+
     const headers = {
       'Authorization': `Bearer ${apiKey}`,
       'Accept': 'application/json',
@@ -31,6 +33,7 @@ class AsanaAPI {
 
     if (!response.ok) {
       const body = await response.text().catch(() => '');
+      console.error('[asana-api] Error:', response.status, body);
       throw new Error(`Asana API ${response.status}: ${body}`);
     }
 
@@ -90,7 +93,7 @@ class AsanaAPI {
   }
 
   async getProjects(workspaceGid) {
-    const fields = 'name,archived,color,modified_at,owner.name,current_status.title,current_status.color';
+    const fields = 'name,archived,color,modified_at,owner.name,members.gid,current_status.title,current_status.color';
     return this._fetchAll(`/workspaces/${workspaceGid}/projects?archived=false&opt_fields=${fields}`);
   }
 

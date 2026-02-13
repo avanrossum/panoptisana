@@ -20,6 +20,7 @@ export default function App() {
   const [version, setVersion] = useState('');
   const [seenTimestamps, setSeenTimestamps] = useState({});
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [myProjectsOnly, setMyProjectsOnly] = useState(false);
   const searchRef = useRef(null);
 
   // ── Init ────────────────────────────────────────────────────
@@ -50,9 +51,9 @@ export default function App() {
         setProjects(cachedProjects || []);
         setSeenTimestamps(seen || {});
 
-        // Set current user ID for comment highlight suppression
-        if (settings.iAmUserId) {
-          setCurrentUserId(settings.iAmUserId);
+        // Set current user ID for comment highlight suppression & project filter
+        if (settings.currentUserId) {
+          setCurrentUserId(settings.currentUserId);
         }
         setVersion(ver);
       } catch (err) {
@@ -192,7 +193,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Sort */}
+      {/* Sort / Filter Bar */}
       {activeTab === 'tasks' && (
         <div className="sort-bar">
           <span className="sort-label">Sort by:</span>
@@ -207,6 +208,18 @@ export default function App() {
             <option value="assignee">Assignee</option>
             <option value="created">Created</option>
           </select>
+        </div>
+      )}
+      {activeTab === 'projects' && currentUserId && (
+        <div className="filter-bar">
+          <label className="filter-checkbox">
+            <input
+              type="checkbox"
+              checked={myProjectsOnly}
+              onChange={(e) => setMyProjectsOnly(e.target.checked)}
+            />
+            <span>Only my projects</span>
+          </label>
         </div>
       )}
 
@@ -236,6 +249,8 @@ export default function App() {
           <ProjectList
             projects={projects}
             searchQuery={searchQuery}
+            myProjectsOnly={myProjectsOnly}
+            currentUserId={currentUserId}
           />
         )}
       </div>

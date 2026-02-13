@@ -25,9 +25,17 @@ const PROJECT_COLORS = {
   'none': '#8890a0'
 };
 
-export default function ProjectList({ projects, searchQuery }) {
+export default function ProjectList({ projects, searchQuery, myProjectsOnly, currentUserId }) {
   const filtered = useMemo(() => {
     let result = [...projects];
+
+    // Filter to only projects the current user is a member of
+    if (myProjectsOnly && currentUserId) {
+      result = result.filter(p => {
+        const memberGids = (p.members || []).map(m => m.gid);
+        return memberGids.includes(currentUserId);
+      });
+    }
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -41,7 +49,7 @@ export default function ProjectList({ projects, searchQuery }) {
     // Sort by name
     result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     return result;
-  }, [projects, searchQuery]);
+  }, [projects, searchQuery, myProjectsOnly, currentUserId]);
 
   if (filtered.length === 0 && projects.length > 0) {
     return (

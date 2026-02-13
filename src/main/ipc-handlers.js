@@ -56,9 +56,16 @@ function registerIpcHandlers({ store, asanaApi, getMainWindow, getSettingsWindow
       return { valid: false, error: 'Invalid key' };
     }
 
+    const trimmedKey = key.trim();
+    console.log('[ipc] Verifying API key, length:', trimmedKey.length, 'starts with:', trimmedKey.substring(0, 2));
+
     // Temporarily set the key for verification
-    const encrypted = store.encryptApiKey(key.trim());
+    const encrypted = store.encryptApiKey(trimmedKey);
     store.setSettings({ apiKey: encrypted });
+
+    // Verify round-trip encryption
+    const decrypted = store.decryptApiKey(encrypted);
+    console.log('[ipc] Decrypt round-trip OK:', decrypted === trimmedKey, 'decrypted length:', decrypted?.length);
 
     const result = await asanaApi.verifyApiKey();
 
