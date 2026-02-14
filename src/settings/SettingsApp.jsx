@@ -19,6 +19,7 @@ export default function SettingsApp() {
   const [apiKeyStatus, setApiKeyStatus] = useState(null);
   const [verifying, setVerifying] = useState(false);
   const [users, setUsers] = useState([]);
+  const [browsers, setBrowsers] = useState([]);
   const [version, setVersion] = useState('');
 
   // ── Init ────────────────────────────────────────────────────
@@ -32,6 +33,18 @@ export default function SettingsApp() {
 
       const u = await window.settingsAPI.getUsers();
       setUsers(u || []);
+
+      const b = await window.settingsAPI.detectBrowsers();
+      setBrowsers(b || []);
+
+      // Auto-default to Asana desktop app if installed and no preference set yet
+      if (!s.openLinksIn || s.openLinksIn === 'default') {
+        const hasAsanaApp = (b || []).some(br => br.id === 'asana-desktop');
+        if (hasAsanaApp) {
+          await window.settingsAPI.setSettings({ openLinksIn: 'asana-desktop' });
+          setSettings(prev => ({ ...prev, openLinksIn: 'asana-desktop' }));
+        }
+      }
 
       const v = await window.settingsAPI.getVersion();
       setVersion(v);
@@ -159,6 +172,10 @@ export default function SettingsApp() {
     updateSetting('globalHotkey', e.target.value);
     // Re-register the global hotkey in the main process
     window.settingsAPI.reRegisterHotkey();
+  }, [updateSetting]);
+
+  const handleOpenLinksInChange = useCallback((e) => {
+    updateSetting('openLinksIn', e.target.value);
   }, [updateSetting]);
 
   if (!settings) return null;
@@ -300,6 +317,19 @@ export default function SettingsApp() {
               High page limits increase API calls per poll. Each page is one Asana API request.
             </div>
           )}
+
+          <div className="form-row">
+            <span className="form-label">Open Asana links in</span>
+            <select
+              className="form-input"
+              value={settings.openLinksIn || 'default'}
+              onChange={handleOpenLinksInChange}
+            >
+              {browsers.map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* ── User Selection ── */}

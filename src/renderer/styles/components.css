@@ -247,6 +247,15 @@
   color: var(--text-muted);
 }
 
+.task-item-meta-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 1px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 .task-item-assignee {
   color: var(--text-secondary);
 }
@@ -264,7 +273,11 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 150px;
+}
+
+.task-item-modified {
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .task-item-actions {
@@ -293,6 +306,29 @@
 .task-btn.secondary {
   background: var(--button-bg);
   color: var(--text-secondary);
+}
+
+.task-btn.complete {
+  background: var(--button-bg);
+  color: var(--text-muted);
+}
+
+.task-btn.complete:hover {
+  color: var(--success);
+}
+
+.task-btn.confirm {
+  background: var(--error);
+  color: #ffffff;
+}
+
+.task-btn.confirm:hover {
+  opacity: 0.9;
+}
+
+.task-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* ── Comment Toggle ── */
@@ -368,6 +404,20 @@
   line-height: 1.4;
   user-select: text;
   word-break: break-word;
+}
+
+.comment-link {
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.comment-link:hover {
+  text-decoration: underline;
+}
+
+.comment-profile-link {
+  font-weight: 500;
 }
 
 .comments-loading {

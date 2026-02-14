@@ -25,6 +25,7 @@ export default function App() {
   const [version, setVersion] = useState('');
   const [seenTimestamps, setSeenTimestamps] = useState({});
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [cachedUsers, setCachedUsers] = useState([]);
   const [myProjectsOnly, setMyProjectsOnly] = useState(false);
   const [selectedProjectGid, setSelectedProjectGid] = useState('');
   const searchRef = useRef(null);
@@ -41,16 +42,18 @@ export default function App() {
         setIsConnected(!!settings.apiKeyVerified);
 
         // Load cached data
-        const [cachedTasks, cachedProjects, seen, ver] = await Promise.all([
+        const [cachedTasks, cachedProjects, seen, ver, users] = await Promise.all([
           window.electronAPI.getTasks(),
           window.electronAPI.getProjects(),
           window.electronAPI.getSeenTimestamps(),
-          window.electronAPI.getVersion()
+          window.electronAPI.getVersion(),
+          window.electronAPI.getUsers()
         ]);
 
         setTasks(cachedTasks || []);
         setProjects(cachedProjects || []);
         setSeenTimestamps(seen || {});
+        setCachedUsers(users || []);
 
         // Set current user ID for comment highlight suppression & project filter
         if (settings.currentUserId) {
@@ -182,6 +185,10 @@ export default function App() {
   const handleMarkSeen = useCallback(async (taskGid, modifiedAt) => {
     await window.electronAPI.setSeenTimestamp(taskGid, modifiedAt);
     setSeenTimestamps(prev => ({ ...prev, [taskGid]: modifiedAt }));
+  }, []);
+
+  const handleCompleteTask = useCallback((taskGid) => {
+    setTasks(prev => prev.filter(t => t.gid !== taskGid));
   }, []);
 
   // ── Render ──────────────────────────────────────────────────
@@ -317,7 +324,9 @@ export default function App() {
             selectedProjectGid={selectedProjectGid}
             seenTimestamps={seenTimestamps}
             onMarkSeen={handleMarkSeen}
+            onComplete={handleCompleteTask}
             currentUserId={currentUserId}
+            cachedUsers={cachedUsers}
           />
         ) : (
           <ProjectList

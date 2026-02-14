@@ -170,6 +170,14 @@ class AsanaAPI {
     return this._fetchAll(`/workspaces/${workspaceGid}/projects?archived=false&opt_fields=${fields}`);
   }
 
+  async completeTask(taskGid) {
+    return this._fetch(`/tasks/${taskGid}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: { completed: true } })
+    });
+  }
+
   async getTaskComments(taskGid) {
     const fields = 'text,html_text,created_by.name,created_at,type';
     const stories = await this._fetchAll(

@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getProjects: () => ipcRenderer.invoke('asana:get-projects'),
   getUsers: () => ipcRenderer.invoke('asana:get-users'),
   getTaskComments: (taskGid) => ipcRenderer.invoke('asana:get-task-comments', taskGid),
+  completeTask: (taskGid) => ipcRenderer.invoke('asana:complete-task', taskGid),
   refreshData: () => ipcRenderer.invoke('asana:refresh'),
 
   // ── API Key ─────────────────────────────────────────────────
@@ -30,6 +31,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ── App ─────────────────────────────────────────────────────
   getVersion: () => ipcRenderer.invoke('app:get-version'),
   checkForUpdates: () => ipcRenderer.invoke('app:check-for-updates'),
+  openUrl: (url) => ipcRenderer.invoke('app:open-url', url),
   quit: () => ipcRenderer.send('app:quit'),
 
   // ── Theme ───────────────────────────────────────────────────

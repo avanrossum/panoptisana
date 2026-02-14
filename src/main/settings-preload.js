@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('settingsAPI', {
   // ── App ─────────────────────────────────────────────────────
   getVersion: () => ipcRenderer.invoke('app:get-version'),
   checkForUpdates: () => ipcRenderer.invoke('app:check-for-updates'),
+  detectBrowsers: () => ipcRenderer.invoke('app:detect-browsers'),
   quit: () => ipcRenderer.send('app:quit'),
   reRegisterHotkey: () => ipcRenderer.send('app:re-register-hotkey'),
 

@@ -66,6 +66,31 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [x] "Projects" dropdown above task list — filter tasks to a single project (obeys exclusion/inclusion lists, "show only my tasks", and "show tasks for" user lists)
 - [x] Status bar count reflects active client-side filters (project dropdown, search, "Only my projects")
 
+## Pre-v1: Code Quality / Architecture
+
+### Refactoring
+- [ ] Extract auto-updater from `main.js` into `updater.js` — auto-updater logic is ~200 lines including download progress window, all event handlers, and 5 IPC handlers. Extracting would drop `main.js` from 573 to ~370 lines
+- [ ] Unify polling callback construction — `onUpdate`/`onPollStarted` callbacks are built identically in `main.js` (startup) and `ipc-handlers.js` (after key verification). Extract a single factory function
+- [ ] Move update IPC handlers (`update-dialog:*`, `app:check-for-updates`, `app:download-update`, `app:restart-for-update`) into the extracted updater module so the full IPC surface is auditable from fewer files
+- [ ] Extract `_getCache(key)` private method in `store.js` — `getCachedTasks`/`getCachedProjects`/`getCachedUsers` are identical (get row, parse JSON, return `[]`)
+- [ ] DRY: `visibleProjectCount` in `App.jsx` duplicates the filter logic from `ProjectList.jsx` (membership + search). Extract shared filter function or compute count inside `ProjectList` and lift it via callback
+- [ ] Move `ACCENT_COLORS` to a shared constants file
+- [ ] Replace `app.isQuitting` monkey-patch on the Electron `app` object with a module-level `let isQuitting` variable
+- [ ] Replace `updateDialogWindow._initData` with a module-scoped variable instead of storing data on the BrowserWindow object
+
+### Security
+- [ ] Add CSP headers to all BrowserWindows (production builds)
+- [ ] Route external URL opens through IPC + `shell.openExternal` instead of `window.open` in renderer (`TaskItem.jsx`, `ProjectList.jsx`)
+- [ ] Add safety comment on `executeJavaScript` string interpolation in download progress window (`main.js` line 178) — value is always `Math.round()` so safe, but the pattern should be documented
+
+### Input Validation
+- [ ] Validate hotkey format before registering (reject invalid accelerator strings)
+- [ ] Debounce hotkey input in Settings to avoid rapid re-registration on every keystroke
+
+### Testing & Documentation
+- [ ] Unit tests for `_applyFilters` logic in asana-api.js
+- [ ] Add JSDoc to shared utilities (applyTheme, useThemeListener)
+
 ## Next Up (Post v1)
 
 - [ ] "Open Asana links in..." selector — detect installed browsers and Asana desktop app, let user choose where links open
@@ -95,13 +120,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [ ] Export task list
 - [ ] Window position memory per display
 
-### Code Quality / Hardening
-- [ ] Validate hotkey format before registering (reject invalid accelerator strings)
-- [ ] Add CSP headers to all BrowserWindows
-- [ ] Unit tests for `_applyFilters` logic in asana-api.js
-- [ ] Debounce hotkey input in Settings to avoid rapid re-registration
-- [ ] Move `ACCENT_COLORS` to a shared constants file
-- [ ] Add JSDoc to shared utilities (applyTheme, useThemeListener)
+### Code Quality / Hardening (Post v1)
 - [ ] Accessibility: add aria labels and keyboard navigation to task/project lists
 - [ ] Structured logging (replace bare console.log/warn/error)
 - [ ] Error boundary components for each renderer

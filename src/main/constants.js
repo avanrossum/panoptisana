@@ -47,6 +47,7 @@ const DEFAULT_SETTINGS = {
   excludedProjectPatterns: [],
   includedTaskPatterns: [],
   includedProjectPatterns: [],
+  openLinksIn: 'default',
   apiKey: null,
   apiKeyVerified: false,
   windowBounds: null

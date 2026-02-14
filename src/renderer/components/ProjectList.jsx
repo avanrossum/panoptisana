@@ -79,7 +79,7 @@ function ProjectItem({ project }) {
 
   const handleOpenProject = useCallback(() => {
     const url = `https://app.asana.com/0/${project.gid}`;
-    window.open(url, '_blank');
+    window.electronAPI.openUrl(url);
   }, [project.gid]);
 
   const handleCopyGid = useCallback(async () => {

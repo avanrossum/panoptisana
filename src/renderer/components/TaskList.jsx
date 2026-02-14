@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import TaskItem from './TaskItem';
 
-export default function TaskList({ tasks, searchQuery, sortBy, selectedProjectGid, seenTimestamps, onMarkSeen, currentUserId }) {
+export default function TaskList({ tasks, searchQuery, sortBy, selectedProjectGid, seenTimestamps, onMarkSeen, onComplete, currentUserId, cachedUsers }) {
   const filteredAndSorted = useMemo(() => {
     let result = [...tasks];
 
@@ -77,7 +77,9 @@ export default function TaskList({ tasks, searchQuery, sortBy, selectedProjectGi
       task={task}
       lastSeenModified={seenTimestamps[task.gid]}
       onMarkSeen={onMarkSeen}
+      onComplete={onComplete}
       currentUserId={currentUserId}
+      cachedUsers={cachedUsers}
     />
   ));
 }

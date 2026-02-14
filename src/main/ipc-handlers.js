@@ -1,4 +1,6 @@
-const { ipcMain, app, Menu } = require('electron');
+const { ipcMain, app, Menu, shell } = require('electron');
+const { execSync } = require('child_process');
+const fs = require('fs');
 
 // ══════════════════════════════════════════════════════════════════════════════
 // IPC HANDLER REGISTRATION
@@ -143,6 +145,17 @@ function registerIpcHandlers({ store, asanaApi, getMainWindow, getSettingsWindow
     }
   });
 
+  ipcMain.handle('asana:complete-task', async (_, taskGid) => {
+    if (!taskGid || typeof taskGid !== 'string') return { success: false };
+    try {
+      await asanaApi.completeTask(taskGid);
+      return { success: true };
+    } catch (err) {
+      console.error('[ipc] Failed to complete task:', err.message);
+      return { success: false, error: err.message };
+    }
+  });
+
   ipcMain.handle('asana:refresh', async () => {
     await asanaApi.refresh();
   });
@@ -167,6 +180,65 @@ function registerIpcHandlers({ store, asanaApi, getMainWindow, getSettingsWindow
     if (settingsWin && !settingsWin.isDestroyed()) {
       settingsWin.close();
     }
+  });
+
+  // ── Link Opening ───────────────────────────────────────────
+
+  ipcMain.handle('app:open-url', (_, url) => {
+    if (!url || typeof url !== 'string') return;
+    const settings = store.getSettings();
+    const openWith = settings.openLinksIn || 'default';
+
+    if (openWith === 'asana-desktop') {
+      // Asana desktop app uses asana:// protocol
+      const asanaUrl = url.replace(/^https?:\/\/app\.asana\.com/, 'asana:/');
+      shell.openExternal(asanaUrl).catch(() => {
+        // Fallback to default browser if Asana app fails
+        shell.openExternal(url).catch(() => {});
+      });
+    } else if (openWith === 'default') {
+      shell.openExternal(url).catch(() => {});
+    } else {
+      // Specific browser bundle ID (e.g. com.google.Chrome)
+      try {
+        execSync(`open -b "${openWith}" "${url}"`);
+      } catch (_) {
+        // Fallback to default browser
+        shell.openExternal(url).catch(() => {});
+      }
+    }
+  });
+
+  ipcMain.handle('app:detect-browsers', () => {
+    const browsers = [];
+
+    // Always include default browser option
+    browsers.push({ id: 'default', name: 'Default Browser' });
+
+    // Detect common macOS browsers
+    const knownBrowsers = [
+      { id: 'com.google.Chrome', name: 'Google Chrome', path: '/Applications/Google Chrome.app' },
+      { id: 'com.apple.Safari', name: 'Safari', path: '/Applications/Safari.app' },
+      { id: 'com.mozilla.firefox', name: 'Firefox', path: '/Applications/Firefox.app' },
+      { id: 'company.thebrowser.Browser', name: 'Arc', path: '/Applications/Arc.app' },
+      { id: 'com.brave.Browser', name: 'Brave', path: '/Applications/Brave Browser.app' },
+      { id: 'com.microsoft.edgemac', name: 'Microsoft Edge', path: '/Applications/Microsoft Edge.app' },
+      { id: 'com.operasoftware.Opera', name: 'Opera', path: '/Applications/Opera.app' },
+      { id: 'ai.perplexity.comet', name: 'Comet', path: '/Applications/Comet.app' }
+    ];
+
+    for (const browser of knownBrowsers) {
+      if (fs.existsSync(browser.path)) {
+        browsers.push({ id: browser.id, name: browser.name });
+      }
+    }
+
+    // Detect Asana desktop app
+    if (fs.existsSync('/Applications/Asana.app')) {
+      browsers.push({ id: 'asana-desktop', name: 'Asana Desktop App' });
+    }
+
+    return browsers;
   });
 
   // ── Context Menu ──────────────────────────────────────────
