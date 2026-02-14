@@ -5,6 +5,21 @@ All notable changes to Panoptisana will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-02-14
+
+### Added
+- "Complete" button on each task with double-confirm safety (click once to arm, again to confirm, 3s auto-reset)
+- Comment link parsing — URLs in comments are now clickable, Asana profile links resolve to user display names (e.g. `[Lauren Lopez]`)
+- "Open Asana links in..." setting — auto-detects installed browsers (Chrome, Safari, Firefox, Arc, Brave, Edge, Opera, Comet) and Asana desktop app; defaults to Asana app when installed
+- Task metadata: project name and section/column displayed on each task item (second metadata row)
+- Task metadata: relative "last modified" timestamp (e.g. "3m ago", "2h ago", "5d ago")
+- Clear search button (X icon) in search bar — appears when text is entered, clears and refocuses on click
+- Status bar task count decrements immediately when completing a task (no longer waits for next poll)
+
+### Changed
+- "Complete" button styling improved for readability — visible border with green hover state
+- Task metadata split into two rows: assignee/due/modified on row 1, project/section on row 2
+
 ## [0.3.0] - 2026-02-14
 
 ### Added

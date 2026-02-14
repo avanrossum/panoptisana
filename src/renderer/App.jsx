@@ -189,6 +189,7 @@ export default function App() {
 
   const handleCompleteTask = useCallback((taskGid) => {
     setTasks(prev => prev.filter(t => t.gid !== taskGid));
+    setUnfilteredTaskCount(prev => prev != null ? prev - 1 : prev);
   }, []);
 
   // ── Render ──────────────────────────────────────────────────
@@ -258,6 +259,15 @@ export default function App() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <button
+              className="search-clear-btn"
+              onClick={() => { setSearchQuery(''); searchRef.current?.focus(); }}
+              title="Clear search"
+            >
+              <Icon path={ICON_PATHS.close} size={12} />
+            </button>
+          )}
         </div>
       </div>
 

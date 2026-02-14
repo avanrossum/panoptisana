@@ -110,7 +110,7 @@
 
 .search-input {
   width: 100%;
-  padding: 6px 10px 6px 30px;
+  padding: 6px 28px 6px 30px;
   background: var(--input-bg);
   border: 1px solid var(--input-border);
   border-radius: 4px;
@@ -127,6 +127,29 @@
   transform: translateY(-50%);
   color: var(--text-muted);
   pointer-events: none;
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  border-radius: 3px;
+  padding: 3px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.search-clear-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 /* ── Sort Bar ── */
@@ -310,11 +333,13 @@
 
 .task-btn.complete {
   background: var(--button-bg);
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
 
 .task-btn.complete:hover {
   color: var(--success);
+  border-color: var(--success);
 }
 
 .task-btn.confirm {

@@ -4,7 +4,7 @@
 
 Open-source Asana task and project visibility tool for macOS. Displays a searchable list of incomplete tasks and active projects with comment tracking and auto-updates.
 
-## Current Version: 0.3.0
+## Current Version: 0.4.0
 
 ### Core Features (v0.1.0)
 - [x] Searchable task list with sorting
@@ -66,6 +66,15 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [x] "Projects" dropdown above task list — filter tasks to a single project (obeys exclusion/inclusion lists, "show only my tasks", and "show tasks for" user lists)
 - [x] Status bar count reflects active client-side filters (project dropdown, search, "Only my projects")
 
+### v0.4.0 Additions
+- [x] "Complete" button on tasks with double-confirm safety (arm → confirm → complete, 3s auto-reset)
+- [x] Comment link parsing — clickable URLs, Asana profile links resolve to `[UserName]`
+- [x] "Open Asana links in..." setting — auto-detects installed browsers + Asana desktop app
+- [x] Task metadata: project name / section column (second metadata row)
+- [x] Task metadata: relative "last modified" timestamp
+- [x] Clear search button (X icon) in search bar
+- [x] Status bar count decrements immediately on task completion
+
 ## Pre-v1: Code Quality / Architecture
 
 ### Refactoring
@@ -80,7 +89,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 
 ### Security
 - [ ] Add CSP headers to all BrowserWindows (production builds)
-- [ ] Route external URL opens through IPC + `shell.openExternal` instead of `window.open` in renderer (`TaskItem.jsx`, `ProjectList.jsx`)
+- [x] Route external URL opens through IPC + `shell.openExternal` instead of `window.open` in renderer (`TaskItem.jsx`, `ProjectList.jsx`)
 - [ ] Add safety comment on `executeJavaScript` string interpolation in download progress window (`main.js` line 178) — value is always `Math.round()` so safe, but the pattern should be documented
 
 ### Input Validation
@@ -93,7 +102,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 
 ## Next Up (Post v1)
 
-- [ ] "Open Asana links in..." selector — detect installed browsers and Asana desktop app, let user choose where links open
+- [x] "Open Asana links in..." selector — detect installed browsers and Asana desktop app, let user choose where links open
 - [ ] "Sort by last comment" sort option for task list
 - [ ] Post a comment to a task from within the app
 - [ ] OAuth authentication (PKCE flow with localhost callback) as alternative to PAT — "Connect to Asana" button for easier onboarding
