@@ -76,6 +76,13 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   exit 1
 fi
 
+# Lint and test
+echo_step "Running lint..."
+npm run lint || { echo_error "Lint failed. Fix errors before releasing."; exit 1; }
+
+echo_step "Running tests..."
+npm test || { echo_error "Tests failed. Fix failures before releasing."; exit 1; }
+
 # Clean previous build artifacts
 echo_step "Cleaning previous build..."
 rm -rf dist/*.dmg dist/*.zip dist/*.yml dist/*.yaml dist/mac dist/mac-arm64 2>/dev/null || true

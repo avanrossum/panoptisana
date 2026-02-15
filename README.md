@@ -60,7 +60,14 @@ The token is stored encrypted on your machine and is never sent anywhere except 
 npm run dev          # Dev mode (Vite HMR + Electron)
 npm run build        # Production build
 npm run pack         # Package without signing
+npm run lint         # ESLint
+npm test             # Run tests
+npm run test:watch   # Tests in watch mode
 ```
+
+## Development Methodology
+
+Panoptisana is built using AI-assisted development with structured engineering practices. Every feature follows a full software development lifecycle: requirements are captured in a living roadmap, architecture decisions and lessons learned are documented in session context files, and a shared set of design standards (coding conventions, style guides, and testing standards) governs consistency across projects. AI tooling accelerates implementation, but the engineering rigor is human-driven: clear specifications, incremental commits, extracted and tested pure logic, CI/CD gates (lint + test on every push), and a release script that enforces quality checks before any build ships. The methodology treats AI as a collaborator operating within well-defined constraints, not as an autonomous agent — the standards, architecture documentation, and accumulated project memory are what make AI-assisted development effective at scale.
 
 ## Known Limitations
 
@@ -71,6 +78,9 @@ npm run pack         # Package without signing
 - **Electron 40** - Desktop framework
 - **React 19** - UI components
 - **Vite 7** - Build tooling
+- **Vitest** - Testing framework
+- **ESLint** - Code quality
+- **GitHub Actions** - CI (lint + test on every push)
 - **electron-updater** - Auto-update support
 
 ## License
