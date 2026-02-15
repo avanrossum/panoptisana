@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import Icon from './Icon';
 import { ICON_PATHS } from '../icons';
+import { filterAndSortProjects } from '../../shared/filters';
 
 // Map Asana project colors to hex values
 const PROJECT_COLORS = {
@@ -26,30 +27,10 @@ const PROJECT_COLORS = {
 };
 
 export default function ProjectList({ projects, searchQuery, myProjectsOnly, currentUserId }) {
-  const filtered = useMemo(() => {
-    let result = [...projects];
-
-    // Filter to only projects the current user is a member of
-    if (myProjectsOnly && currentUserId) {
-      result = result.filter(p => {
-        const memberGids = (p.members || []).map(m => m.gid);
-        return memberGids.includes(currentUserId);
-      });
-    }
-
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(p => {
-        const name = (p.name || '').toLowerCase();
-        const owner = (p.owner?.name || '').toLowerCase();
-        return name.includes(q) || owner.includes(q);
-      });
-    }
-
-    // Sort by name
-    result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    return result;
-  }, [projects, searchQuery, myProjectsOnly, currentUserId]);
+  const filtered = useMemo(() =>
+    filterAndSortProjects(projects, { searchQuery, myProjectsOnly, currentUserId }),
+    [projects, searchQuery, myProjectsOnly, currentUserId]
+  );
 
   if (filtered.length === 0 && projects.length > 0) {
     return (

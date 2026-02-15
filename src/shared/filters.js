@@ -6,7 +6,7 @@
 
 /**
  * Apply inclusion/exclusion filters to items (tasks or projects).
- * Used by AsanaAPI._applyFilters after fetching from the API.
+ * Canonical implementation — also inlined in asana-api.js (CJS main process).
  *
  * @param {Array} items - Tasks or projects
  * @param {string} type - 'task' or 'project'
@@ -47,7 +47,6 @@ export function applyItemFilters(items, type, settings) {
 
 /**
  * Filter tasks by project and search query, then sort.
- * Mirrors the useMemo logic in TaskList.jsx.
  *
  * @param {Array} tasks - Task list
  * @param {Object} options
@@ -103,7 +102,6 @@ export function filterAndSortTasks(tasks, { searchQuery, sortBy, selectedProject
 
 /**
  * Filter projects by membership and search query, sorted by name.
- * Mirrors the useMemo logic in ProjectList.jsx.
  *
  * @param {Array} projects - Project list
  * @param {Object} options

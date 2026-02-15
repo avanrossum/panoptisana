@@ -1,93 +1,51 @@
 import { useState, useCallback } from 'react';
 import Icon from './Icon';
 import { ICON_PATHS } from '../icons';
+import { formatDueDate, formatRelativeTime, parseCommentSegments } from '../../shared/formatters';
 
 /**
- * Parse Asana comment text to replace profile links with display names
- * and make other URLs clickable.
- *
- * Profile links: https://app.asana.com/0/.../.../profile/USER_GID
- * General URLs: https://... or http://...
- *
- * @param {string} text - Comment text
- * @param {Array} users - Cached workspace users [{ gid, name }]
+ * Render parsed comment segments as React elements.
+ * Uses parseCommentSegments (pure logic) and wraps results in JSX.
  */
-function parseCommentText(text, users) {
-  if (!text) return null;
+function renderCommentText(text, users) {
+  const segments = parseCommentSegments(text, users);
+  if (!segments) return null;
 
-  // Build a quick lookup map for user GID → name
-  const userMap = {};
-  if (users && users.length > 0) {
-    for (const u of users) {
-      userMap[u.gid] = u.name;
-    }
-  }
-
-  // Regex for Asana profile links — capture the URL and user GID
-  const profileRegex = /https:\/\/app\.asana\.com\/\d+\/\d+\/profile\/(\d+)/g;
-  // Regex for general URLs (must come after profile replacement)
-  const urlRegex = /(https?:\/\/[^\s<]+)/g;
-
-  // First pass: replace profile links with a placeholder token
-  const profileMatches = [];
-  let processed = text.replace(profileRegex, (match, userGid) => {
-    const token = `__PROFILE_${profileMatches.length}__`;
-    profileMatches.push({ token, userGid, url: match });
-    return token;
-  });
-
-  // Second pass: split on URLs and profile tokens to build React elements
-  const allTokens = profileMatches.map(p => p.token);
-  const tokenPattern = allTokens.length > 0
-    ? new RegExp(`(${allTokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')}|https?://[^\\s<]+)`)
-    : urlRegex;
-
-  const parts = processed.split(tokenPattern);
-  const elements = [];
-
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
-    if (!part) continue;
-
-    // Check if this part is a profile token
-    const profileMatch = profileMatches.find(p => p.token === part);
-    if (profileMatch) {
-      const userName = userMap[profileMatch.userGid] || 'Profile';
-      elements.push(
+  return segments.map((seg, i) => {
+    if (seg.type === 'profile') {
+      return (
         <a
           key={i}
           className="comment-link comment-profile-link"
           href="#"
           onClick={(e) => {
             e.preventDefault();
-            window.electronAPI.openUrl(profileMatch.url);
+            window.electronAPI.openUrl(seg.url);
           }}
           title="Open profile in Asana"
         >
-          [{userName}]
+          [{seg.value}]
         </a>
       );
-    } else if (/^https?:\/\//.test(part)) {
-      elements.push(
+    } else if (seg.type === 'url') {
+      return (
         <a
           key={i}
           className="comment-link"
           href="#"
           onClick={(e) => {
             e.preventDefault();
-            window.electronAPI.openUrl(part);
+            window.electronAPI.openUrl(seg.url);
           }}
-          title={part}
+          title={seg.url}
         >
-          {part.length > 50 ? part.substring(0, 50) + '...' : part}
+          {seg.value}
         </a>
       );
     } else {
-      elements.push(part);
+      return seg.value;
     }
-  }
-
-  return elements;
+  });
 }
 
 /**
@@ -185,53 +143,15 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
 
   // Format due date
   const dueDate = task.due_on || task.due_at;
-  let dueDateText = '';
-  let isOverdue = false;
-  if (dueDate) {
-    const d = new Date(dueDate);
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    isOverdue = d < now;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    if (d.getTime() === today.getTime()) {
-      dueDateText = 'Today';
-    } else if (d.getTime() === tomorrow.getTime()) {
-      dueDateText = 'Tomorrow';
-    } else {
-      dueDateText = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
-  }
+  const dueDateInfo = formatDueDate(dueDate);
+  const dueDateText = dueDateInfo?.text || '';
+  const isOverdue = dueDateInfo?.isOverdue || false;
 
   const projectName = task.projects?.[0]?.name;
   const sectionName = task.memberships?.[0]?.section?.name;
 
-  // Format modified_at as relative time or short date
-  let modifiedText = '';
-  if (task.modified_at) {
-    const modDate = new Date(task.modified_at);
-    const now = new Date();
-    const diffMs = now - modDate;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) {
-      modifiedText = 'just now';
-    } else if (diffMins < 60) {
-      modifiedText = `${diffMins}m ago`;
-    } else if (diffHours < 24) {
-      modifiedText = `${diffHours}h ago`;
-    } else if (diffDays < 7) {
-      modifiedText = `${diffDays}d ago`;
-    } else {
-      modifiedText = modDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
-  }
+  // Format modified_at as relative time
+  const modifiedText = formatRelativeTime(task.modified_at);
 
   const completeLabel = completeState === 'confirming'
     ? 'Really?'
@@ -308,7 +228,7 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
                     month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
                   })}
                 </span>
-                <div className="comment-text">{parseCommentText(comment.text, cachedUsers)}</div>
+                <div className="comment-text">{renderCommentText(comment.text, cachedUsers)}</div>
               </div>
             ))
           ) : (

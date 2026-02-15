@@ -80,6 +80,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [ ] Fix: "Only my projects" checkbox missing from the Projects tab — regression, needs immediate resolution
 - [ ] Create `code_review.md` — document code review standards and process
 - [ ] Full code review against `code_review.md` standards — identify issues, improvements, and action items
+- [ ] Comment count — display number of comments on each task in the task list
 - [ ] First-pull loading state — show "Loading..." or similar on the main screen after entering an API key for the first time, so the empty list doesn't look broken while the initial poll runs
 
 ## Pre-v1: Code Quality / Architecture

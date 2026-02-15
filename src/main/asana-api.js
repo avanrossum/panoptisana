@@ -4,6 +4,32 @@
 // Manages polling, task/project/user fetching, and comment retrieval.
 // ══════════════════════════════════════════════════════════════════════════════
 
+// Inline filter logic (mirrors shared/filters.js — main process is CJS, can't import ESM)
+function applyItemFilters(items, type, settings) {
+  const gidList = type === 'task'
+    ? (settings.excludedTaskGids || [])
+    : (settings.excludedProjectGids || []);
+  const excludePatterns = type === 'task'
+    ? (settings.excludedTaskPatterns || [])
+    : (settings.excludedProjectPatterns || []);
+  const includePatterns = type === 'task'
+    ? (settings.includedTaskPatterns || [])
+    : (settings.includedProjectPatterns || []);
+
+  return items.filter(item => {
+    const name = (item.name || '').toLowerCase();
+    if (includePatterns.length > 0) {
+      const matchesAny = includePatterns.some(p => p && name.includes(p.toLowerCase()));
+      if (!matchesAny) return false;
+    }
+    if (gidList.includes(item.gid)) return false;
+    for (const pattern of excludePatterns) {
+      if (pattern && name.includes(pattern.toLowerCase())) return false;
+    }
+    return true;
+  });
+}
+
 const BASE_URL = 'https://app.asana.com/api/1.0';
 const MAX_RETRIES = 3;
 const DEFAULT_MAX_SEARCH_PAGES = 20; // Default safety cap: 2,000 tasks
@@ -298,29 +324,7 @@ class AsanaAPI {
   }
 
   _applyFilters(items, type, settings) {
-    const gidList = type === 'task' ? (settings.excludedTaskGids || []) : (settings.excludedProjectGids || []);
-    const excludePatterns = type === 'task' ? (settings.excludedTaskPatterns || []) : (settings.excludedProjectPatterns || []);
-    const includePatterns = type === 'task' ? (settings.includedTaskPatterns || []) : (settings.includedProjectPatterns || []);
-
-    return items.filter(item => {
-      const name = (item.name || '').toLowerCase();
-
-      // Inclusion filter: if any patterns defined, name must match at least one
-      if (includePatterns.length > 0) {
-        const matchesAny = includePatterns.some(p => p && name.includes(p.toLowerCase()));
-        if (!matchesAny) return false;
-      }
-
-      // Exclude by GID
-      if (gidList.includes(item.gid)) return false;
-
-      // Exclude by name pattern (case-insensitive partial match)
-      for (const pattern of excludePatterns) {
-        if (pattern && name.includes(pattern.toLowerCase())) return false;
-      }
-
-      return true;
-    });
+    return applyItemFilters(items, type, settings);
   }
 }
 
