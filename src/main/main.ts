@@ -66,9 +66,19 @@ function showUpdateDialog(mode: UpdateDialogInitData['mode'], options: { current
   }
 
   const theme = resolveTheme();
+
+  // Center over main window if available, otherwise OS default
+  const pos: { x?: number; y?: number } = {};
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    const b = mainWindow.getBounds();
+    pos.x = Math.round(b.x + (b.width - UPDATE_DIALOG_SIZE.WIDTH) / 2);
+    pos.y = Math.round(b.y + (b.height - UPDATE_DIALOG_SIZE.HEIGHT) / 2);
+  }
+
   const newWindow = new BrowserWindow({
     width: UPDATE_DIALOG_SIZE.WIDTH,
     height: UPDATE_DIALOG_SIZE.HEIGHT,
+    ...pos,
     alwaysOnTop: true,
     resizable: false,
     minimizable: false,
@@ -344,9 +354,19 @@ function openSettings(): void {
   }
 
   const theme = resolveTheme();
+
+  // Center over main window if available, otherwise OS default
+  const pos: { x?: number; y?: number } = {};
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    const b = mainWindow.getBounds();
+    pos.x = Math.round(b.x + (b.width - SETTINGS_WINDOW_SIZE.WIDTH) / 2);
+    pos.y = Math.round(b.y + (b.height - SETTINGS_WINDOW_SIZE.HEIGHT) / 2);
+  }
+
   settingsWindow = new BrowserWindow({
     width: SETTINGS_WINDOW_SIZE.WIDTH,
     height: SETTINGS_WINDOW_SIZE.HEIGHT,
+    ...pos,
     alwaysOnTop: true,
     resizable: false,
     minimizable: false,

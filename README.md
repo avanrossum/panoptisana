@@ -93,4 +93,4 @@ This project is licensed under the **GNU General Public License v3.0** - see the
 
 Built by [MipYip](https://github.com/avanrossum).
 
-Check out [Actions](https://github.com/avanrossum/actions-releases) - a quick action launcher for macOS.
+<!-- Check out [Actions](https://github.com/avanrossum/actions-releases) - a quick action launcher for macOS. -->
