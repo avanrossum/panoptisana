@@ -509,10 +509,12 @@ app.whenReady().then(() => {
 
   if (isDemo) {
     console.log('[demo] Demo mode active — using fake Asana data');
-    store.setSettings({
-      apiKeyVerified: true,
-      currentUserId: DEMO_CURRENT_USER.gid,
-    });
+    // Only seed demo settings if not already configured (preserve real user data)
+    const demoSettings = store.getSettings();
+    if (!demoSettings.currentUserId) {
+      store.setSettings({ currentUserId: DEMO_CURRENT_USER.gid });
+    }
+    store.setSettings({ apiKeyVerified: true });
     asanaApi = new DemoAsanaAPI({ store });
   } else {
     asanaApi = new AsanaAPI({

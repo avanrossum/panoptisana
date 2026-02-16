@@ -6,7 +6,7 @@
 
 import type { Store } from './store';
 import type {
-  AsanaComment, AsanaWorkspace, VerifyApiKeyResult,
+  AsanaUser, AsanaComment, AsanaWorkspace, VerifyApiKeyResult,
   PollCallback, PollStartedCallback, AsanaAPILike
 } from '../shared/types';
 import { DEMO_WORKSPACE, DEMO_CURRENT_USER, getDemoUsers, getDemoProjects, getDemoTasks } from './demo-data';
@@ -34,8 +34,7 @@ export class DemoAsanaAPI implements AsanaAPILike {
     return [DEMO_WORKSPACE];
   }
 
-  async getUsers(workspaceGid: string): Promise<import('../shared/types').AsanaUser[]> {
-    void workspaceGid;
+  async getUsers(_workspaceGid: string): Promise<AsanaUser[]> {
     return getDemoUsers();
   }
 
