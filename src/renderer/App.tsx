@@ -5,14 +5,46 @@ import Icon from './components/Icon';
 import { ICON_PATHS } from './icons';
 import { applyTheme } from '../shared/applyTheme';
 import { useThemeListener } from '../shared/useThemeListener';
+import { applyItemFilters } from '../shared/filters';
 import './styles/components.css';
-import type { AsanaTask, AsanaProject, AsanaUser, SortBy, PollDataPacket } from '../shared/types';
+import type { AsanaTask, AsanaProject, AsanaUser, SortBy, PollDataPacket, MaskedSettings, Settings } from '../shared/types';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // APP - Main renderer root component
 // ══════════════════════════════════════════════════════════════════════════════
 
 type TabId = 'tasks' | 'projects';
+
+/** Filter-relevant fields from Settings, used to re-filter cached data client-side */
+interface FilterSettings {
+  excludedTaskGids: string[];
+  excludedTaskPatterns: string[];
+  excludedProjectGids: string[];
+  excludedProjectPatterns: string[];
+  includedTaskPatterns: string[];
+  includedProjectPatterns: string[];
+}
+
+const EMPTY_FILTER_SETTINGS: FilterSettings = {
+  excludedTaskGids: [],
+  excludedTaskPatterns: [],
+  excludedProjectGids: [],
+  excludedProjectPatterns: [],
+  includedTaskPatterns: [],
+  includedProjectPatterns: [],
+};
+
+/** Extract filter-relevant fields from full settings */
+function extractFilterSettings(settings: MaskedSettings | Settings): FilterSettings {
+  return {
+    excludedTaskGids: settings.excludedTaskGids || [],
+    excludedTaskPatterns: settings.excludedTaskPatterns || [],
+    excludedProjectGids: settings.excludedProjectGids || [],
+    excludedProjectPatterns: settings.excludedProjectPatterns || [],
+    includedTaskPatterns: settings.includedTaskPatterns || [],
+    includedProjectPatterns: settings.includedProjectPatterns || [],
+  };
+}
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>('tasks');
@@ -31,6 +63,7 @@ export default function App() {
   const [cachedUsers, setCachedUsers] = useState<AsanaUser[]>([]);
   const [myProjectsOnly, setMyProjectsOnly] = useState(false);
   const [selectedProjectGid, setSelectedProjectGid] = useState('');
+  const [filterSettings, setFilterSettings] = useState<FilterSettings>(EMPTY_FILTER_SETTINGS);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // ── Init ────────────────────────────────────────────────────
@@ -43,6 +76,7 @@ export default function App() {
         applyTheme(settings);
 
         setIsConnected(!!settings.apiKeyVerified);
+        setFilterSettings(extractFilterSettings(settings));
 
         // Load cached data
         const [cachedTasks, cachedProjects, seen, ver, users] = await Promise.all([
@@ -97,6 +131,20 @@ export default function App() {
     };
   }, []);
 
+  // ── Settings Updates ──────────────────────────────────────────
+  // Listen for settings changes from main process (e.g. context menu exclude,
+  // settings window close). Re-applies client-side filters instantly without re-polling.
+
+  useEffect(() => {
+    const unsub = window.electronAPI.onSettingsChanged((settings: MaskedSettings) => {
+      setFilterSettings(extractFilterSettings(settings));
+      if (settings.currentUserId) {
+        setCurrentUserId(settings.currentUserId);
+      }
+    });
+    return unsub;
+  }, []);
+
   // ── Theme Events ────────────────────────────────────────────
 
   useThemeListener(window.electronAPI);
@@ -117,12 +165,23 @@ export default function App() {
 
   // ── Derived Data ───────────────────────────────────────────
 
-  // Build sorted project list from tasks for the project filter dropdown.
+  // Apply exclusion/inclusion filters client-side for instant feedback
+  const filteredTasks = useMemo(() =>
+    applyItemFilters(tasks, 'task', filterSettings) as AsanaTask[],
+    [tasks, filterSettings]
+  );
+
+  const filteredProjects = useMemo(() =>
+    applyItemFilters(projects, 'project', filterSettings) as AsanaProject[],
+    [projects, filterSettings]
+  );
+
+  // Build sorted project list from filtered tasks for the project filter dropdown.
   // Uses projects referenced on tasks (not the Projects tab data) so the
   // dropdown only shows projects that actually have incomplete tasks.
   const taskProjects = useMemo(() => {
     const map = new Map<string, string>();
-    for (const task of tasks) {
+    for (const task of filteredTasks) {
       for (const p of task.projects || []) {
         if (p.gid && p.name && !map.has(p.gid)) {
           map.set(p.gid, p.name);
@@ -132,19 +191,19 @@ export default function App() {
     return Array.from(map.entries())
       .map(([gid, name]) => ({ gid, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [tasks]);
+  }, [filteredTasks]);
 
   // Count of tasks visible after project filter (before search/sort in TaskList)
   const visibleTaskCount = useMemo(() => {
-    if (!selectedProjectGid) return tasks.length;
-    return tasks.filter(t =>
+    if (!selectedProjectGid) return filteredTasks.length;
+    return filteredTasks.filter(t =>
       (t.projects || []).some(p => p.gid === selectedProjectGid)
     ).length;
-  }, [tasks, selectedProjectGid]);
+  }, [filteredTasks, selectedProjectGid]);
 
   // Count of projects visible after membership + search filters
   const visibleProjectCount = useMemo(() => {
-    let result = projects;
+    let result = filteredProjects;
     if (myProjectsOnly && currentUserId) {
       result = result.filter(p =>
         (p.members || []).some(m => m.gid === currentUserId)
@@ -159,7 +218,7 @@ export default function App() {
       });
     }
     return result.length;
-  }, [projects, myProjectsOnly, currentUserId, searchQuery]);
+  }, [filteredProjects, myProjectsOnly, currentUserId, searchQuery]);
 
   // Clear project filter if the selected project no longer exists in task data
   useEffect(() => {
@@ -331,7 +390,7 @@ export default function App() {
           </div>
         ) : activeTab === 'tasks' ? (
           <TaskList
-            tasks={tasks}
+            tasks={filteredTasks}
             searchQuery={searchQuery}
             sortBy={sortBy}
             selectedProjectGid={selectedProjectGid}
@@ -343,7 +402,7 @@ export default function App() {
           />
         ) : (
           <ProjectList
-            projects={projects}
+            projects={filteredProjects}
             searchQuery={searchQuery}
             myProjectsOnly={myProjectsOnly}
             currentUserId={currentUserId}

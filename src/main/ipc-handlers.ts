@@ -6,6 +6,19 @@ import type { Store } from './store';
 import type { AsanaAPI } from './asana-api';
 import type { MaskedSettings, ContextMenuItem, BrowserInfo } from '../shared/types';
 
+/** Send masked settings to the main renderer so it can re-apply client-side filters */
+export function broadcastSettingsToRenderer(store: Store, getMainWindow: () => BrowserWindow | null): void {
+  const mainWin = getMainWindow();
+  if (mainWin && !mainWin.isDestroyed()) {
+    const settings = store.getSettings();
+    const masked: MaskedSettings = {
+      ...settings,
+      apiKey: settings.apiKey ? '••••••••' : null
+    } as MaskedSettings;
+    mainWin.webContents.send('settings:updated', masked);
+  }
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // IPC HANDLER REGISTRATION
 // ══════════════════════════════════════════════════════════════════════════════
@@ -259,8 +272,8 @@ export function registerIpcHandlers({ store, asanaApi, getMainWindow, getSetting
           const settings = store.getSettings() as Record<string, unknown>;
           const list = [...((settings[excludeKey] as string[]) || []), name];
           store.setSettings({ [excludeKey]: list });
-          // Re-poll to apply the new exclusion immediately
-          asanaApi.refresh();
+          // Notify renderer to re-apply filters instantly (no re-poll needed)
+          broadcastSettingsToRenderer(store, getMainWindow);
         }
       },
       { type: 'separator' },

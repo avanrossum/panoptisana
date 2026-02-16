@@ -5,6 +5,22 @@ All notable changes to Panoptisana will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-02-15
+
+### Changed
+- Exclusion/inclusion filters now apply client-side in the renderer for instant feedback — no more waiting for an Asana API re-poll after filter changes
+- Right-click "Exclude" context menu action is now instant — broadcasts updated settings to renderer instead of triggering a full re-poll
+- Settings window close broadcasts updated filter settings to renderer immediately, then triggers a background re-poll for non-filter changes (user selection, etc.)
+- Unfiltered task/project data is now cached and sent to renderer; `applyItemFilters` runs in `App.tsx` via `useMemo`
+
+### Added
+- `settings:updated` IPC event channel — main process broadcasts masked settings to renderer on filter changes
+- `onSettingsChanged` listener in preload and `ElectronAPI` interface
+- `FilterSettings` state in `App.tsx` for tracking filter-relevant settings independently
+
+### Removed
+- Server-side `_applyFilters()` method from `AsanaAPI` class (filtering moved to renderer)
+
 ## [0.5.0] - 2026-02-15
 
 ### Changed

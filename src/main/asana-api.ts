@@ -4,11 +4,9 @@
 // Manages polling, task/project/user fetching, and comment retrieval.
 // ══════════════════════════════════════════════════════════════════════════════
 
-import { applyItemFilters } from '../shared/filters';
 import type {
   AsanaTask, AsanaProject, AsanaUser, AsanaComment,
-  AsanaWorkspace, PollDataPacket, VerifyApiKeyResult,
-  ItemFilterType, Settings
+  AsanaWorkspace, PollDataPacket, VerifyApiKeyResult
 } from '../shared/types';
 import type { Store } from './store';
 
@@ -305,19 +303,15 @@ export class AsanaAPI {
         unfilteredTaskCount = tasks.length;
       }
 
-      // Apply exclusion/inclusion filters
-      tasks = this._applyFilters(tasks, 'task', settings) as AsanaTask[];
-
       // Fetch projects
-      let projects = await this.getProjects(workspaceGid);
+      const projects = await this.getProjects(workspaceGid);
       const unfilteredProjectCount = projects.length;
-      projects = this._applyFilters(projects, 'project', settings) as AsanaProject[];
 
-      // Cache results
+      // Cache unfiltered results — renderer applies exclusion/inclusion filters client-side
       this._store.setCachedTasks(tasks);
       this._store.setCachedProjects(projects);
 
-      // Notify renderer (include unfiltered counts for status bar)
+      // Send unfiltered data to renderer (it will apply filters locally for instant feedback)
       if (this._onUpdate) {
         this._onUpdate({ tasks, projects, unfilteredTaskCount, unfilteredProjectCount });
       }
@@ -327,9 +321,5 @@ export class AsanaAPI {
         this._onUpdate({ error: (err as Error).message });
       }
     }
-  }
-
-  private _applyFilters(items: AsanaTask[] | AsanaProject[], type: ItemFilterType, settings: Partial<Settings>): AsanaTask[] | AsanaProject[] {
-    return applyItemFilters(items, type, settings) as AsanaTask[] | AsanaProject[];
   }
 }

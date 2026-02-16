@@ -1,7 +1,7 @@
 import { app, BrowserWindow, nativeTheme, ipcMain, screen, globalShortcut, dialog } from 'electron';
 import path from 'path';
 import { createTray, getTray } from './tray';
-import { registerIpcHandlers } from './ipc-handlers';
+import { registerIpcHandlers, broadcastSettingsToRenderer } from './ipc-handlers';
 import { Store } from './store';
 import { AsanaAPI } from './asana-api';
 import { autoUpdater } from 'electron-updater';
@@ -415,7 +415,11 @@ function openSettings(): void {
 
   settingsWindow.on('closed', () => {
     settingsWindow = null;
-    // Trigger a fresh poll after settings change (re-applies filters server-side)
+    // Broadcast updated settings to renderer for instant filter updates
+    if (store) {
+      broadcastSettingsToRenderer(store, () => mainWindow);
+    }
+    // Trigger a fresh poll for non-filter changes (user selection, interval, etc.)
     if (asanaApi) {
       asanaApi.refresh();
     }

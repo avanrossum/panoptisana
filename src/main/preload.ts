@@ -51,6 +51,11 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.on('asana:poll-started', handler);
     return () => ipcRenderer.removeListener('asana:poll-started', handler);
   },
+  onSettingsChanged: (callback) => {
+    const handler = (_: Electron.IpcRendererEvent, settings: unknown) => callback(settings as any);
+    ipcRenderer.on('settings:updated', handler);
+    return () => ipcRenderer.removeListener('settings:updated', handler);
+  },
   onThemeChanged: (callback) => {
     const handler = (_: Electron.IpcRendererEvent, theme: unknown) => callback(theme as any);
     ipcRenderer.on('theme:changed', handler);

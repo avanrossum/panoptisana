@@ -26,7 +26,7 @@ interface ProjectFilterOptions {
 
 /**
  * Apply inclusion/exclusion filters to items (tasks or projects).
- * Canonical implementation — also inlined in asana-api.js (CJS main process).
+ * Used client-side in the renderer for instant filter feedback.
  */
 export function applyItemFilters(
   items: FilterableItem[],

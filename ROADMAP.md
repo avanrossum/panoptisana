@@ -4,7 +4,7 @@
 
 Open-source Asana task and project visibility tool for macOS. Displays a searchable list of incomplete tasks and active projects with comment tracking and auto-updates.
 
-## Current Version: 0.5.0
+## Current Version: 0.5.1
 
 ### Core Features (v0.1.0)
 - [x] Searchable task list with sorting
@@ -84,6 +84,12 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [x] CI gates on typecheck; release script includes typecheck step
 - [x] Updated CODING_STANDARDS.md to reflect TypeScript adoption
 
+### v0.5.1 Additions
+- [x] Client-side exclusion/inclusion filtering — filters apply instantly in the renderer via `useMemo` instead of waiting for an Asana API re-poll
+- [x] `settings:updated` IPC event — main process broadcasts settings changes to renderer for instant filter feedback
+- [x] Right-click "Exclude" is now instant (no re-poll needed)
+- [x] Settings window close broadcasts updated settings immediately, background re-poll for non-filter changes
+
 ## Next Immediate
 
 - [ ] Fix: "Only my projects" checkbox missing from the Projects tab — regression, needs immediate resolution
@@ -152,7 +158,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [ ] Accessibility: add aria labels and keyboard navigation to task/project lists
 - [ ] Structured logging (replace bare console.log/warn/error)
 - [ ] Error boundary components for each renderer
-- [ ] Performance: memoize filtered/sorted task and project lists (useMemo)
+- [x] Performance: memoize filtered/sorted task and project lists (useMemo) — done in v0.5.1
 
 ## Tech Stack
 

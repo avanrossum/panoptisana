@@ -192,6 +192,7 @@ export interface IpcSendChannelMap {
 export interface IpcEventChannelMap {
   'asana:data-updated':       { args: [data: PollDataPacket] };
   'asana:poll-started':       { args: [] };
+  'settings:updated':         { args: [settings: MaskedSettings] };
   'theme:changed':            { args: [theme: ResolvedTheme] };
   'accent:changed':           { args: [accent: string] };
 }
@@ -241,6 +242,7 @@ export interface ElectronAPI {
   // Events from main
   onDataUpdate(callback: (data: PollDataPacket) => void): () => void;
   onPollStarted(callback: () => void): () => void;
+  onSettingsChanged(callback: (settings: MaskedSettings) => void): () => void;
   onThemeChanged(callback: (theme: ResolvedTheme) => void): () => void;
   onAccentChanged(callback: (accent: string) => void): () => void;
 }
