@@ -5,6 +5,18 @@ All notable changes to Panoptisana will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-02-15
+
+### Changed
+- Full TypeScript migration — all 29 source files converted from JavaScript to strict TypeScript
+- Dual tsconfig architecture: `tsconfig.main.json` (CJS output for main process) + `tsconfig.renderer.json` (type checking only, Vite builds)
+- Shared type definitions in `src/shared/types.ts` (Asana domain types, IPC channel contracts, preload API interfaces)
+- Window augmentation in `src/shared/global.d.ts` (`window.electronAPI`, `window.settingsAPI`, `window.updateAPI`)
+- Strict mode enabled: `noUnusedLocals`, `noUnusedParameters`, `strict: true`
+- Build pipeline: three concurrent dev processes (Vite + `tsc --watch` + Electron) coordinated via `wait-on`
+- CI workflow gates on `typecheck` step before lint and test
+- Release script includes `npm run typecheck` before lint/test
+
 ## [0.4.0] - 2026-02-14
 
 ### Added

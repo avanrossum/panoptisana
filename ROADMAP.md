@@ -4,7 +4,7 @@
 
 Open-source Asana task and project visibility tool for macOS. Displays a searchable list of incomplete tasks and active projects with comment tracking and auto-updates.
 
-## Current Version: 0.4.0
+## Current Version: 0.5.0
 
 ### Core Features (v0.1.0)
 - [x] Searchable task list with sorting
@@ -75,6 +75,15 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [x] Clear search button (X icon) in search bar
 - [x] Status bar count decrements immediately on task completion
 
+### v0.5.0 Additions
+- [x] Full TypeScript migration — all 29 source files converted to strict TypeScript
+- [x] Dual tsconfig: `tsconfig.main.json` (CJS for main process) + `tsconfig.renderer.json` (Vite builds)
+- [x] Shared types in `src/shared/types.ts` (domain types, IPC contracts, preload APIs)
+- [x] Window augmentation in `src/shared/global.d.ts`
+- [x] Strict mode: `noUnusedLocals`, `noUnusedParameters`
+- [x] CI gates on typecheck; release script includes typecheck step
+- [x] Updated CODING_STANDARDS.md to reflect TypeScript adoption
+
 ## Next Immediate
 
 - [ ] Fix: "Only my projects" checkbox missing from the Projects tab — regression, needs immediate resolution
@@ -86,26 +95,27 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 ## Pre-v1: Code Quality / Architecture
 
 ### Refactoring
-- [ ] Extract auto-updater from `main.js` into `updater.js` — auto-updater logic is ~200 lines including download progress window, all event handlers, and 5 IPC handlers. Extracting would drop `main.js` from 573 to ~370 lines
-- [ ] Unify polling callback construction — `onUpdate`/`onPollStarted` callbacks are built identically in `main.js` (startup) and `ipc-handlers.js` (after key verification). Extract a single factory function
+- [ ] Extract auto-updater from `main.ts` into `updater.ts` — auto-updater logic is ~200 lines including download progress window, all event handlers, and 5 IPC handlers. Extracting would drop `main.ts` from 573 to ~370 lines
+- [ ] Unify polling callback construction — `onUpdate`/`onPollStarted` callbacks are built identically in `main.ts` (startup) and `ipc-handlers.ts` (after key verification). Extract a single factory function
 - [ ] Move update IPC handlers (`update-dialog:*`, `app:check-for-updates`, `app:download-update`, `app:restart-for-update`) into the extracted updater module so the full IPC surface is auditable from fewer files
-- [ ] Extract `_getCache(key)` private method in `store.js` — `getCachedTasks`/`getCachedProjects`/`getCachedUsers` are identical (get row, parse JSON, return `[]`)
-- [ ] DRY: `visibleProjectCount` in `App.jsx` duplicates the filter logic from `ProjectList.jsx` (membership + search). Extract shared filter function or compute count inside `ProjectList` and lift it via callback
+- [ ] Extract `_getCache(key)` private method in `store.ts` — `getCachedTasks`/`getCachedProjects`/`getCachedUsers` are identical (get row, parse JSON, return `[]`)
+- [ ] DRY: `visibleProjectCount` in `App.tsx` duplicates the filter logic from `ProjectList.tsx` (membership + search). Extract shared filter function or compute count inside `ProjectList` and lift it via callback
 - [ ] Move `ACCENT_COLORS` to a shared constants file
 - [ ] Replace `app.isQuitting` monkey-patch on the Electron `app` object with a module-level `let isQuitting` variable
 - [ ] Replace `updateDialogWindow._initData` with a module-scoped variable instead of storing data on the BrowserWindow object
+- [ ] TypeScript: replace `(err as Error).message` casts with a shared `toErrorMessage()` utility
 
 ### Security
 - [ ] Add CSP headers to all BrowserWindows (production builds)
-- [x] Route external URL opens through IPC + `shell.openExternal` instead of `window.open` in renderer (`TaskItem.jsx`, `ProjectList.jsx`)
-- [ ] Add safety comment on `executeJavaScript` string interpolation in download progress window (`main.js` line 178) — value is always `Math.round()` so safe, but the pattern should be documented
+- [x] Route external URL opens through IPC + `shell.openExternal` instead of `window.open` in renderer (`TaskItem.tsx`, `ProjectList.tsx`)
+- [ ] Add safety comment on `executeJavaScript` string interpolation in download progress window (`main.ts`) — value is always `Math.round()` so safe, but the pattern should be documented
 
 ### Input Validation
 - [ ] Validate hotkey format before registering (reject invalid accelerator strings)
 - [ ] Debounce hotkey input in Settings to avoid rapid re-registration on every keystroke
 
 ### Testing & Documentation
-- [ ] Unit tests for `_applyFilters` logic in asana-api.js
+- [x] Unit tests for `applyItemFilters` logic (54 tests in `filters.test.ts` and `formatters.test.ts`)
 - [ ] Add JSDoc to shared utilities (applyTheme, useThemeListener)
 
 ## Next Up (Post v1)
@@ -154,7 +164,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 | Packaging | electron-builder |
 | Auto-update | electron-updater |
 | Storage | SQLite (better-sqlite3) |
-| Language | JavaScript (ES Modules in renderer, CJS in main) |
+| Language | TypeScript (strict mode) |
 
 ## Gotchas
 
