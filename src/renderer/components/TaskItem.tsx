@@ -17,6 +17,36 @@ interface TaskItemProps {
 
 type CompleteState = 'idle' | 'confirming' | 'completing';
 
+// ── Helpers ─────────────────────────────────────────────────────
+
+interface ProjectMembership {
+  projectGid: string;
+  projectName: string;
+  sectionGid?: string;
+  sectionName?: string;
+}
+
+/** Build enriched project list by joining projects with memberships. */
+function buildProjectMemberships(task: AsanaTask): ProjectMembership[] {
+  const sectionMap = new Map<string, { gid?: string; name?: string }>();
+  if (task.memberships) {
+    for (const m of task.memberships) {
+      if (m.project?.gid && m.section) {
+        sectionMap.set(m.project.gid, { gid: m.section.gid, name: m.section.name });
+      }
+    }
+  }
+  return (task.projects || []).map(p => {
+    const sec = sectionMap.get(p.gid);
+    return {
+      projectGid: p.gid,
+      projectName: p.name,
+      sectionGid: sec?.gid,
+      sectionName: sec?.name,
+    };
+  });
+}
+
 // ── Comment Rendering ───────────────────────────────────────────
 
 /**
@@ -77,7 +107,13 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
   const [commentsExpanded, setCommentsExpanded] = useState(false);
   const [comments, setComments] = useState<AsanaComment[] | null>(null);
   const [loadingComments, setLoadingComments] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedGid, setCopiedGid] = useState(false);
+  const [copiedName, setCopiedName] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
+  const [copiedAssigneeGid, setCopiedAssigneeGid] = useState(false);
+  const [copiedProjectGid, setCopiedProjectGid] = useState<string | null>(null);
+  const [copiedSectionGid, setCopiedSectionGid] = useState<string | null>(null);
+  const [projectsExpanded, setProjectsExpanded] = useState(false);
   const [suppressHighlight, setSuppressHighlight] = useState(false);
   const [completeState, setCompleteState] = useState<CompleteState>('idle');
 
@@ -121,12 +157,64 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
   const handleCopyGid = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(task.gid);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      setCopiedGid(true);
+      setTimeout(() => setCopiedGid(false), 1500);
     } catch (err) {
       console.error('Copy failed:', err);
     }
   }, [task.gid]);
+
+  const handleCopyName = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(task.name);
+      setCopiedName(true);
+      setTimeout(() => setCopiedName(false), 1500);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  }, [task.name]);
+
+  const handleCopyUrl = useCallback(async () => {
+    try {
+      const url = `https://app.asana.com/0/0/${task.gid}/f`;
+      await navigator.clipboard.writeText(url);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 1500);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  }, [task.gid]);
+
+  const handleCopyAssigneeGid = useCallback(async () => {
+    if (!task.assignee?.gid) return;
+    try {
+      await navigator.clipboard.writeText(task.assignee.gid);
+      setCopiedAssigneeGid(true);
+      setTimeout(() => setCopiedAssigneeGid(false), 1500);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  }, [task.assignee?.gid]);
+
+  const handleCopyProjectGid = useCallback(async (projectGid: string) => {
+    try {
+      await navigator.clipboard.writeText(projectGid);
+      setCopiedProjectGid(projectGid);
+      setTimeout(() => setCopiedProjectGid(null), 1500);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  }, []);
+
+  const handleCopySectionGid = useCallback(async (sectionGid: string) => {
+    try {
+      await navigator.clipboard.writeText(sectionGid);
+      setCopiedSectionGid(sectionGid);
+      setTimeout(() => setCopiedSectionGid(null), 1500);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  }, []);
 
   const handleComplete = useCallback(async () => {
     if (completeState === 'idle') {
@@ -165,8 +253,18 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
   const dueDateText = dueDateInfo?.text || '';
   const isOverdue = dueDateInfo?.isOverdue || false;
 
-  const projectName = task.projects?.[0]?.name;
-  const sectionName = task.memberships?.[0]?.section?.name;
+  // Build enriched project memberships
+  const projectMemberships = buildProjectMemberships(task);
+
+  // Collapsible project logic:
+  // - Always show first (primary) project
+  // - If exactly 2, show both
+  // - If 3+, show first and collapse the rest behind a toggle
+  const primaryProject = projectMemberships[0];
+  const extraProjects = projectMemberships.slice(1);
+  const showAllExtras = extraProjects.length === 1; // auto-show if only one extra
+  const hasCollapsedProjects = extraProjects.length > 1;
+  const visibleExtras = (showAllExtras || projectsExpanded) ? extraProjects : [];
 
   // Format modified_at as relative time
   const modifiedText = formatRelativeTime(task.modified_at);
@@ -177,14 +275,88 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
       ? 'Completing...'
       : 'Complete';
 
+  /** Render a single project row: project name [copy] / section [copy] */
+  const renderProjectRow = (pm: ProjectMembership) => (
+    <div key={pm.projectGid} className="task-item-project-row">
+      <span className="task-item-project-name" title={pm.projectName}>
+        {pm.projectName}
+      </span>
+      <button
+        className="task-inline-copy task-inline-copy-always"
+        onClick={(e) => { e.stopPropagation(); handleCopyProjectGid(pm.projectGid); }}
+        title={copiedProjectGid === pm.projectGid ? 'Copied!' : `Copy project GID (${pm.projectGid})`}
+      >
+        <Icon path={ICON_PATHS.copy} size={11} />
+      </button>
+      {copiedProjectGid === pm.projectGid && <span className="task-copied-label">Copied!</span>}
+      {pm.sectionName && (
+        <>
+          <span className="task-item-section-sep">/</span>
+          <span className="task-item-section-label" title={pm.sectionName}>
+            {pm.sectionName}
+          </span>
+          {pm.sectionGid && (
+            <button
+              className="task-inline-copy task-inline-copy-always"
+              onClick={(e) => { e.stopPropagation(); handleCopySectionGid(pm.sectionGid!); }}
+              title={copiedSectionGid === pm.sectionGid ? 'Copied!' : `Copy section GID (${pm.sectionGid})`}
+            >
+              <Icon path={ICON_PATHS.copy} size={11} />
+            </button>
+          )}
+          {copiedSectionGid === pm.sectionGid && <span className="task-copied-label">Copied!</span>}
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div className={`task-item ${hasNewActivity ? 'highlighted' : ''}`} onContextMenu={handleContextMenu}>
       <div className="task-item-header" onClick={handleToggleComments}>
         <div className="task-item-content">
-          <div className="task-item-name">{task.name}</div>
+          {/* Task name row with copy button */}
+          <div className="task-item-name-row">
+            <span className="task-item-name">{task.name}</span>
+            <button
+              className="task-inline-copy task-inline-copy-always"
+              onClick={(e) => { e.stopPropagation(); handleCopyName(); }}
+              title={copiedName ? 'Copied!' : 'Copy task name'}
+            >
+              <Icon path={ICON_PATHS.copy} size={12} />
+            </button>
+            {copiedName && <span className="task-copied-label">Copied!</span>}
+          </div>
+
+          {/* GID row with copy button */}
+          <div className="task-item-gid-row">
+            <span className="task-item-gid">{task.gid}</span>
+            <button
+              className="task-inline-copy task-inline-copy-always"
+              onClick={(e) => { e.stopPropagation(); handleCopyGid(); }}
+              title={copiedGid ? 'Copied!' : 'Copy task GID'}
+            >
+              <Icon path={ICON_PATHS.copy} size={12} />
+            </button>
+            {copiedGid && <span className="task-copied-label">Copied!</span>}
+          </div>
+
+          {/* Subtask indicator */}
+          {task.parent && (
+            <div className="task-item-parent">
+              subtask of <span className="task-item-parent-name" title={task.parent.name}>{task.parent.name}</span>
+            </div>
+          )}
+
+          {/* Meta row: assignee, due date, modified */}
           <div className="task-item-meta">
             {task.assignee && (
-              <span className="task-item-assignee">{task.assignee.name}</span>
+              <button
+                className="task-item-assignee-btn"
+                onClick={(e) => { e.stopPropagation(); handleCopyAssigneeGid(); }}
+                title={copiedAssigneeGid ? 'Copied!' : `Copy assignee GID (${task.assignee.gid})`}
+              >
+                {copiedAssigneeGid ? 'Copied!' : task.assignee.name}
+              </button>
             )}
             {dueDate && (
               <span className={`task-item-due ${isOverdue ? 'overdue' : ''}`}>
@@ -197,27 +369,39 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
               </span>
             )}
           </div>
-          {projectName && (
-            <div className="task-item-meta-secondary">
-              <span className="task-item-project" title={projectName}>
-                {sectionName ? `${projectName} / ${sectionName}` : projectName}
-              </span>
+
+          {/* Projects list with collapsible extras */}
+          {primaryProject && (
+            <div className="task-item-projects">
+              {renderProjectRow(primaryProject)}
+              {visibleExtras.map(pm => renderProjectRow(pm))}
+              {hasCollapsedProjects && (
+                <button
+                  className="task-item-projects-toggle"
+                  onClick={(e) => { e.stopPropagation(); setProjectsExpanded(!projectsExpanded); }}
+                >
+                  <span className={`comment-toggle-icon ${projectsExpanded ? 'expanded' : ''}`}>
+                    <Icon path={ICON_PATHS.chevronRight} size={10} />
+                  </span>
+                  {projectsExpanded ? 'Hide' : `+${extraProjects.length} more`}
+                </button>
+              )}
             </div>
           )}
         </div>
         <div className="task-item-actions" onClick={(e) => e.stopPropagation()}>
-          <button className="task-btn primary" onClick={handleOpenTask}>
-            Open Task
-          </button>
-          <button className="task-btn secondary" onClick={handleCopyGid}>
-            {copied ? 'Copied!' : 'Copy GID'}
-          </button>
           <button
             className={`task-btn ${completeState === 'confirming' ? 'confirm' : 'complete'}`}
             onClick={handleComplete}
             disabled={completeState === 'completing'}
           >
             {completeLabel}
+          </button>
+          <button className="task-btn primary" onClick={handleOpenTask}>
+            Open Task
+          </button>
+          <button className="task-btn secondary" onClick={handleCopyUrl}>
+            {copiedUrl ? 'Copied!' : 'Copy URL'}
           </button>
         </div>
       </div>

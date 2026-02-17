@@ -5,6 +5,25 @@ All notable changes to Panoptisana will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.6] - 2026-02-17
+
+### Changed
+- Task item UI redesign — task items now surface more Asana data for sprint management and automation workflows
+- Task GID displayed directly below task name with always-visible copy button
+- Task name has its own always-visible copy button
+- Subtask indicator — tasks that are subtasks now show "subtask of [Parent Task Name]"
+- Assignee name is clickable to copy the assignee's profile GID
+- All projects a task belongs to are surfaced with format: `project name [copy] / section name [copy]`
+- Collapsible project list — primary project always shown; if only one extra, both shown; if 3+, extra projects collapse behind a "+N more" toggle
+- Right-side buttons reordered: Complete (top), Open Task, Copy URL
+- Copy buttons use always-visible style (0.5 opacity, full opacity on hover) instead of hidden-until-hover
+
+### Added
+- `parent` field on `AsanaTask` type — tracks subtask relationships (`parent.gid`, `parent.name`)
+- `section.gid` in task memberships — enables copy-GID for individual sections within the task item
+- `buildProjectMemberships()` helper — joins task `projects[]` with `memberships[]` to build enriched per-project section data
+- Demo data: 2 subtask examples with parent references and multi-project membership
+
 ## [0.5.5] - 2026-02-16
 
 ### Added

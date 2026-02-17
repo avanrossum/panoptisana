@@ -40,7 +40,8 @@ export interface AsanaTask {
   completed: boolean;
   assignee: { gid: string; name: string } | null;
   projects?: { gid: string; name: string }[];
-  memberships?: { section?: { name: string } }[];
+  memberships?: { project?: { gid: string }; section?: { gid: string; name: string } }[];
+  parent?: { gid: string; name: string } | null;
   due_on: string | null;
   due_at: string | null;
   created_at: string;

@@ -178,7 +178,7 @@ export class AsanaAPI {
   }
 
   async getTasks(workspaceGid: string, assigneeGid: string | null): Promise<AsanaTask[]> {
-    const fields = 'name,assignee.name,assignee.gid,completed,due_on,due_at,modified_at,created_at,num_subtasks,projects.name,projects.gid,memberships.section.name';
+    const fields = 'name,assignee.name,assignee.gid,completed,due_on,due_at,modified_at,created_at,num_subtasks,parent.name,parent.gid,projects.name,projects.gid,memberships.project.gid,memberships.section.gid,memberships.section.name';
     const assigneeParam = assigneeGid ? `&assignee=${assigneeGid}` : '';
     const settings = this._store.getSettings();
     const maxPages = settings.maxSearchPages || DEFAULT_MAX_SEARCH_PAGES;

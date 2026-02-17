@@ -252,6 +252,13 @@
   min-width: 0;
 }
 
+.task-item-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
 .task-item-name {
   font-size: 13px;
   font-weight: 500;
@@ -259,6 +266,54 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.task-item-gid-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 1px;
+}
+
+.task-item-gid {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: ui-monospace, 'SF Mono', Monaco, 'Cascadia Mono', monospace;
+  letter-spacing: 0.3px;
+  user-select: text;
+}
+
+.task-copied-label {
+  font-size: 9px;
+  color: var(--success);
+  margin-left: 2px;
+}
+
+.task-inline-copy {
+  background: none;
+  border: none;
+  border-radius: 3px;
+  padding: 2px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+  flex-shrink: 0;
+}
+
+/* Always-visible variant: subtle but present */
+.task-inline-copy-always {
+  opacity: 0.5;
+}
+
+.task-inline-copy:hover {
+  opacity: 1 !important;
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .task-item-meta {
@@ -270,17 +325,20 @@
   color: var(--text-muted);
 }
 
-.task-item-meta-secondary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 1px;
+.task-item-assignee-btn {
+  background: none;
+  border: none;
+  border-radius: 3px;
+  padding: 0 2px;
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
-.task-item-assignee {
-  color: var(--text-secondary);
+.task-item-assignee-btn:hover {
+  color: var(--accent);
+  background: var(--bg-hover);
 }
 
 .task-item-due {
@@ -291,16 +349,82 @@
   color: var(--error);
 }
 
-.task-item-project {
+.task-item-modified {
   color: var(--text-muted);
+  font-style: italic;
+}
+
+.task-item-parent {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.task-item-modified {
+.task-item-parent-name {
+  color: var(--text-secondary);
+}
+
+.task-item-projects {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 3px;
+}
+
+.task-item-project-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 0;
+}
+
+.task-item-project-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+}
+
+.task-item-section-label {
+  font-size: 11px;
   color: var(--text-muted);
   font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.task-item-section-sep {
+  color: var(--text-muted);
+  opacity: 0.5;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.task-item-projects-toggle {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-radius: 3px;
+  padding: 1px 4px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.task-item-projects-toggle:hover {
+  color: var(--text-secondary);
+  background: var(--bg-hover);
 }
 
 .task-item-actions {

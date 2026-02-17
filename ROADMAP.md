@@ -4,7 +4,7 @@
 
 Open-source Asana task and project visibility tool for macOS. Displays a searchable list of incomplete tasks and active projects with comment tracking and auto-updates.
 
-## Current Version: 0.5.5
+## Current Version: 0.5.6
 
 ### Core Features (v0.1.0)
 - [x] Searchable task list with sorting
@@ -108,6 +108,16 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [x] Project section GID surfacing — toggle to show section names and copy-GID buttons on each project (mirrors the comment toggle pattern on tasks)
 - [x] Project field GID surfacing — tabbed "Sections & Fields" panel on each project, with copy-GID buttons and CSV export for both sections and fields
 
+### v0.5.6 Additions
+- [x] Task item UI redesign — GID surfaced below task name, always-visible copy buttons for name/GID/assignee/project/section
+- [x] Subtask indicator — "subtask of [Parent Task Name]" shown when task has a parent
+- [x] Collapsible project list — primary project always shown, extra projects behind "+N more" toggle
+- [x] Per-project section display with copy-GID — format: `project name [copy] / section name [copy]`
+- [x] Assignee name clickable to copy profile GID
+- [x] Right-side buttons reordered: Complete, Open Task, Copy URL
+- [x] `parent` field added to `AsanaTask` type and API opt_fields
+- [x] `section.gid` added to task memberships for per-section copy-GID
+
 ## Next Immediate
 
 - [ ] Fix: CSV export save dialog appears behind the main window — needs `alwaysOnTop` or parent window handling so the native save dialog is visible
@@ -146,6 +156,13 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [x] Unit tests for `applyItemFilters` logic (54 tests in `filters.test.ts` and `formatters.test.ts`)
 - [ ] Add JSDoc to shared utilities (applyTheme, useThemeListener)
 
+## Task Detail View (timing TBD — pre or post v1)
+
+- [ ] Slide-out task detail panel — a detail view that slides out from the task list, showing full task information in a more spacious layout
+- [ ] Full comment history — list view shows only the latest comment; detail view shows all comments with scrolling
+- [ ] Subtask and parent task navigation — display subtasks on the detail view with clickable links, and link back to parent task if the task is a subtask
+- [ ] Quick-comment buttons — preset comment templates for common responses (e.g. "Meeting needed to discuss", "Blocked — waiting on dependency", "In progress — will update by EOD") posted directly to the task via the Asana API
+
 ## Next Up (Post v1)
 
 - [x] "Open Asana links in..." selector — detect installed browsers and Asana desktop app, let user choose where links open
@@ -162,7 +179,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [ ] Task count badges in tray menu
 - [ ] Notification for new comments
 - [ ] Keyboard navigation in task list
-- [ ] Task subtask display
+- [x] Task subtask indicator (v0.5.6 — "subtask of [Parent]"; full subtask listing planned in Task Detail View)
 
 ### Medium Priority
 - [ ] Custom sort persistence
