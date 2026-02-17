@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import type { ElectronAPI } from '../shared/types';
+import type { ElectronAPI, PollDataPacket, MaskedSettings, ResolvedTheme } from '../shared/types';
 
 const electronAPI: ElectronAPI = {
   // ── Settings ────────────────────────────────────────────────
@@ -47,7 +47,7 @@ const electronAPI: ElectronAPI = {
 
   // ── Events from Main ────────────────────────────────────────
   onDataUpdate: (callback) => {
-    const handler = (_: Electron.IpcRendererEvent, data: unknown) => callback(data as any);
+    const handler = (_: Electron.IpcRendererEvent, data: PollDataPacket) => callback(data);
     ipcRenderer.on('asana:data-updated', handler);
     return () => ipcRenderer.removeListener('asana:data-updated', handler);
   },
@@ -57,17 +57,17 @@ const electronAPI: ElectronAPI = {
     return () => ipcRenderer.removeListener('asana:poll-started', handler);
   },
   onSettingsChanged: (callback) => {
-    const handler = (_: Electron.IpcRendererEvent, settings: unknown) => callback(settings as any);
+    const handler = (_: Electron.IpcRendererEvent, settings: MaskedSettings) => callback(settings);
     ipcRenderer.on('settings:updated', handler);
     return () => ipcRenderer.removeListener('settings:updated', handler);
   },
   onThemeChanged: (callback) => {
-    const handler = (_: Electron.IpcRendererEvent, theme: unknown) => callback(theme as any);
+    const handler = (_: Electron.IpcRendererEvent, theme: ResolvedTheme) => callback(theme);
     ipcRenderer.on('theme:changed', handler);
     return () => ipcRenderer.removeListener('theme:changed', handler);
   },
   onAccentChanged: (callback) => {
-    const handler = (_: Electron.IpcRendererEvent, accent: unknown) => callback(accent as any);
+    const handler = (_: Electron.IpcRendererEvent, accent: string) => callback(accent);
     ipcRenderer.on('accent:changed', handler);
     return () => ipcRenderer.removeListener('accent:changed', handler);
   }

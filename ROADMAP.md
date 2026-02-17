@@ -120,12 +120,12 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 
 ## Next Immediate
 
+- [x] Fix: Shell injection in `ipc-handlers.ts` — `execSync` with string interpolation replaced by `execFile` with argument array (v0.5.6 code review)
+- [x] Fix: Type-unsafe `as any` casts in all 3 preload files — typed against `IpcEventChannelMap` (v0.5.6 code review)
 - [ ] Fix: CSV export save dialog appears behind the main window — needs `alwaysOnTop` or parent window handling so the native save dialog is visible
 - [ ] Fix: "Only my projects" checkbox missing from the Projects tab — regression, needs immediate resolution
 - [ ] Verify: Status bar "out of X" total no longer appears when using "Show tasks for" multi-select — only the filtered count is shown. This may be working as intended, further verification required
 - [ ] Fix: Changing "Show tasks for" user selection does not immediately update the task list — may be blocked by an in-progress poll, or the settings broadcast isn't triggering a re-filter/re-poll. Possible solution: clear the task list on user selection change and show a "Display conditions changed, refetching..." message until the re-poll completes. Needs investigation (pre-v1)
-- [ ] Create `code_review.md` — document code review standards and process
-- [ ] Full code review against `code_review.md` standards — identify issues, improvements, and action items
 - [ ] Comment count — display number of comments on each task in the task list
 - [ ] First-pull loading state — show "Loading..." or similar on the main screen after entering an API key for the first time, so the empty list doesn't look broken while the initial poll runs
 
@@ -141,16 +141,32 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [ ] Replace `app.isQuitting` monkey-patch on the Electron `app` object with a module-level `let isQuitting` variable
 - [ ] Replace `updateDialogWindow._initData` with a module-scoped variable instead of storing data on the BrowserWindow object
 - [ ] TypeScript: replace `(err as Error).message` casts with a shared `toErrorMessage()` utility
-- [ ] TypeScript: remove `as any` casts on preload IPC event handlers — type the `IpcRendererEvent` callbacks against the IPC channel maps for proper type safety at the boundary
+- [x] TypeScript: remove `as any` casts on preload IPC event handlers — type the `IpcRendererEvent` callbacks against the IPC channel maps for proper type safety at the boundary (v0.5.6 code review)
+- [ ] DRY: Extract `useCopyToClipboard` hook — 6 nearly identical copy handlers in `TaskItem.tsx` (~60 lines), same pattern in `ProjectList.tsx`. Extract to shared hook, extract `<CopyButton />` component
+- [ ] DRY: Deduplicate export handlers in `ProjectList.tsx` — sections CSV and fields CSV export handlers are nearly identical, extract shared `exportCsvData()` helper
+- [ ] Split `components.css` (825 lines) — monolith styles tasks, projects, comments, status bar, error banner. Split into per-component files (`task-item.css`, `project-list.css`, `status-bar.css`). Replace hardcoded `#ffffff` with CSS variable, extract repeated truncation/flex-center patterns into utility classes
+- [ ] Split `SettingsApp.tsx` (468 lines) — extract General, Filters, About tabs into separate components
+- [ ] Split `demo-data.ts` (399 lines) — separate demo users, projects, and tasks into individual files for readability
+- [ ] Fix mutable global `_sectionCounter` in `demo-data.ts` — makes `getDemoTasks()` non-idempotent. Scope inside the function or use deterministic IDs
+- [ ] Add `React.memo` to `TaskItem` and `ProjectList` — both rendered in `.map()` loops with object props; list can exceed 2000 items
+- [ ] Replace hardcoded colors in `settings.css` (`#ffffff`, `#f5f5f7`, `#1a1a2e`) with CSS variables from `variables.css`
+- [ ] TypeScript: tighten `Settings.accentColor` from `string` to `AccentColor` union type
+- [ ] TypeScript: tighten `Settings.openLinksIn` from `string` to union type (`'default' | 'asana-desktop' | string`)
+- [ ] TypeScript: standardize null/optional patterns in `types.ts` — `AsanaTask` mixes `string | null` and `?: string` for optional fields
+- [ ] Replace non-null assertions (`seg.url!`, `store!`) with optional chaining or type narrowing guards
 
 ### Security
 - [ ] Add CSP headers to all BrowserWindows (production builds)
 - [x] Route external URL opens through IPC + `shell.openExternal` instead of `window.open` in renderer (`TaskItem.tsx`, `ProjectList.tsx`)
 - [x] ~~Removed `executeJavaScript` string interpolation in download progress window~~ — replaced with IPC-based progress in v0.5.2
+- [x] Fix shell injection via `execSync` in `ipc-handlers.ts` — replaced with `execFile` argument array (v0.5.6 code review)
+- [ ] Add `noopener,noreferrer` to `window.open()` call in `SettingsApp.tsx` (GitHub link)
+- [ ] Fix API key verification race condition — key is stored before verification completes; crash during verification leaves unverified key persisted. Store only on success
 
 ### Input Validation
 - [ ] Validate hotkey format before registering (reject invalid accelerator strings)
 - [ ] Debounce hotkey input in Settings to avoid rapid re-registration on every keystroke
+- [ ] Validate URL format in `app:open-url` handler before passing to `shell.openExternal`
 
 ### Testing & Documentation
 - [x] Unit tests for `applyItemFilters` logic (54 tests in `filters.test.ts` and `formatters.test.ts`)
@@ -196,8 +212,14 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 ### Code Quality / Hardening (Post v1)
 - [ ] Accessibility: add aria labels and keyboard navigation to task/project lists
 - [ ] Structured logging (replace bare console.log/warn/error)
-- [ ] Error boundary components for each renderer
+- [ ] Error boundary components for each renderer — crash in one component takes down entire window
 - [x] Performance: memoize filtered/sorted task and project lists (useMemo) — done in v0.5.1
+- [ ] Fix `suppressHighlight` in `TaskItem.tsx` — once set to `true` it never resets; new comments from other users won't trigger highlight until remount
+- [ ] Clean up `setInterval` for auto-update checks on app quit
+- [ ] Fix `useThemeListener` potential listener leak — unstable API ref could cause listener attach/detach churn
+- [ ] Remove unused Vite alias `@shared-styles` from `vite.config.ts`
+- [ ] Memoize regex construction in `formatters.ts` `parseCommentSegments` — currently rebuilds on every call
+- [ ] Use stable keys in `FilterListEditor.tsx` `.map()` — currently uses array index
 
 ## Tech Stack
 

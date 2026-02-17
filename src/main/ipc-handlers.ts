@@ -1,5 +1,5 @@
 import { ipcMain, app, dialog, Menu, shell, clipboard, BrowserWindow } from 'electron';
-import { execSync } from 'child_process';
+import { execFile } from 'child_process';
 import fs from 'fs';
 
 import type { Store } from './store';
@@ -250,12 +250,12 @@ export function registerIpcHandlers({ store, asanaApi, getMainWindow, getSetting
       shell.openExternal(url).catch(() => {});
     } else {
       // Specific browser bundle ID (e.g. com.google.Chrome)
-      try {
-        execSync(`open -b "${openWith}" "${url}"`);
-      } catch (_) {
-        // Fallback to default browser
-        shell.openExternal(url).catch(() => {});
-      }
+      execFile('open', ['-b', openWith, url], (err) => {
+        if (err) {
+          // Fallback to default browser
+          shell.openExternal(url).catch(() => {});
+        }
+      });
     }
   });
 

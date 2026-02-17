@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import type { SettingsAPI } from '../shared/types';
+import type { SettingsAPI, ResolvedTheme } from '../shared/types';
 
 const settingsAPI: SettingsAPI = {
   // ── Settings ────────────────────────────────────────────────
@@ -30,12 +30,12 @@ const settingsAPI: SettingsAPI = {
 
   // ── Events ──────────────────────────────────────────────────
   onThemeChanged: (callback) => {
-    const handler = (_: Electron.IpcRendererEvent, theme: unknown) => callback(theme as any);
+    const handler = (_: Electron.IpcRendererEvent, theme: ResolvedTheme) => callback(theme);
     ipcRenderer.on('theme:changed', handler);
     return () => ipcRenderer.removeListener('theme:changed', handler);
   },
   onAccentChanged: (callback) => {
-    const handler = (_: Electron.IpcRendererEvent, accent: unknown) => callback(accent as any);
+    const handler = (_: Electron.IpcRendererEvent, accent: string) => callback(accent);
     ipcRenderer.on('accent:changed', handler);
     return () => ipcRenderer.removeListener('accent:changed', handler);
   }
