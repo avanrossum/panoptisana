@@ -233,6 +233,29 @@ export default function App() {
     }
   }, [taskProjects, selectedProjectGid]);
 
+  // Prune stale pinned GIDs that no longer exist in live data
+  useEffect(() => {
+    if (tasks.length === 0 && projects.length === 0) return;
+
+    const taskGidSet = new Set(tasks.map(t => t.gid));
+    const projectGidSet = new Set(projects.map(p => p.gid));
+
+    const prunedTaskPins = filterSettings.pinnedTaskGids.filter(gid => taskGidSet.has(gid));
+    const prunedProjectPins = filterSettings.pinnedProjectGids.filter(gid => projectGidSet.has(gid));
+
+    const taskPinsChanged = prunedTaskPins.length !== filterSettings.pinnedTaskGids.length;
+    const projectPinsChanged = prunedProjectPins.length !== filterSettings.pinnedProjectGids.length;
+
+    if (taskPinsChanged || projectPinsChanged) {
+      const updates: Partial<FilterSettings> = {};
+      if (taskPinsChanged) updates.pinnedTaskGids = prunedTaskPins;
+      if (projectPinsChanged) updates.pinnedProjectGids = prunedProjectPins;
+
+      setFilterSettings(prev => ({ ...prev, ...updates }));
+      window.electronAPI.setSettings(updates);
+    }
+  }, [tasks, projects, filterSettings.pinnedTaskGids, filterSettings.pinnedProjectGids]);
+
   // ── Handlers ────────────────────────────────────────────────
 
   const handleOpenSettings = useCallback(() => {

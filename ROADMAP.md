@@ -121,6 +121,11 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 ### v0.5.7 Additions
 - [x] Pinned tasks and projects — pin/unpin via right-click context menu or inline pin button, persists across sessions, gold/amber left border, stable partition sort (pinned float to top preserving relative order)
 - [x] Projects tab UI parity — project items redesigned to mirror task item layout: name-row with copy, GID-row with copy, meta row (owner + relative modified time), vertical actions (Pin, Open Project, Copy URL)
+- [x] Fix: Stale pinned GIDs — prune pinned task/project GIDs that no longer exist in live data (prevents unbounded array growth)
+- [x] Fix: Replace `as string[]` type assertions with `Array.isArray()` runtime guards in `ipc-handlers.ts`
+- [x] DRY: Extract generic `applyPinnedPartition<T>()` helper in `filters.ts` — replaces duplicated stable partition logic in both task and project sort functions
+- [x] DRY: Extract `useCopyToClipboard` / `useCopyToClipboardKeyed` hooks — replaces 6 identical copy handlers in `TaskItem.tsx` and 5 in `ProjectList.tsx`
+- [x] DRY: Deduplicate `.project-item-actions` CSS — identical to `.task-item-actions`, consolidated to single class
 
 ## Up Next
 
@@ -169,7 +174,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [ ] Move update IPC handlers (`update-dialog:*`, `app:check-for-updates`, `app:download-update`, `app:restart-for-update`) into the extracted updater module so the full IPC surface is auditable from fewer files
 - [ ] Extract `_getCache(key)` private method in `store.ts` — `getCachedTasks`/`getCachedProjects`/`getCachedUsers` are identical (get row, parse JSON, return `[]`)
 - [ ] DRY: `visibleProjectCount` in `App.tsx` duplicates the filter logic from `ProjectList.tsx` (membership + search). Extract shared filter function or compute count inside `ProjectList` and lift it via callback
-- [ ] DRY: Extract `useCopyToClipboard` hook — 6 nearly identical copy handlers in `TaskItem.tsx` (~60 lines), same pattern in `ProjectList.tsx`. Extract to shared hook, extract `<CopyButton />` component
+- [x] DRY: Extract `useCopyToClipboard` hook — 6 nearly identical copy handlers in `TaskItem.tsx` (~60 lines), same pattern in `ProjectList.tsx`. Extracted to `src/shared/useCopyToClipboard.ts` (v0.5.7 code review)
 - [ ] DRY: Deduplicate export handlers in `ProjectList.tsx` — sections CSV and fields CSV export handlers are nearly identical, extract shared `exportCsvData()` helper
 - [ ] Move `ACCENT_COLORS` to a shared constants file
 - [ ] Replace `app.isQuitting` monkey-patch on the Electron `app` object with a module-level `let isQuitting` variable
@@ -181,7 +186,15 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [ ] Fix mutable global `_sectionCounter` in `demo-data.ts` — makes `getDemoTasks()` non-idempotent. Scope inside the function or use deterministic IDs
 - [ ] Replace hardcoded colors in `settings.css` (`#ffffff`, `#f5f5f7`, `#1a1a2e`) with CSS variables from `variables.css`
 
+### CSS & Layout
+- [ ] Fix `.project-color-dot` vertical alignment — currently floats slightly high of the project name text baseline. Add `margin-top` to align with the first line of content
+- [ ] Rename `.project-item-content` to `.item-content` — naming convention inconsistency, task items use `task-item-content` but both classes are structurally identical. Consider a shared class
+- [ ] Deduplicate `.project-item-gid-row` / `.task-item-gid-row` and `.project-item-gid` / `.task-item-gid` CSS blocks — identical declarations, consolidate into shared classes or use a single class on both item types
+- [ ] Add `maxSearchPages` to `DEFAULT_SETTINGS` in `constants.ts` — currently only defined in `types.ts` Settings interface, missing from the runtime defaults object
+
 ### TypeScript
+- [ ] Refactor `FilterSettings` in `App.tsx` to use `Pick<Settings, ...>` instead of re-declaring the same fields — reduces drift risk when Settings interface changes
+- [ ] Add `e.stopPropagation()` to pin button click in `ProjectItem` — currently missing, parent click handlers could fire on pin toggle
 - [ ] Replace `(err as Error).message` casts with a shared `toErrorMessage()` utility
 - [x] Remove `as any` casts on preload IPC event handlers — typed against `IpcEventChannelMap` (v0.5.6 code review)
 - [ ] Tighten `Settings.accentColor` from `string` to `AccentColor` union type
@@ -205,6 +218,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 ### Testing & Documentation
 - [x] Unit tests for `applyItemFilters` logic (54 tests in `filters.test.ts` and `formatters.test.ts`)
 - [ ] Add JSDoc to shared utilities (applyTheme, useThemeListener)
+- [ ] Add test for context menu pin toggle in `ipc-handlers.ts` — verify GID added/removed from pinned arrays, verify broadcast to renderer
 
 ## Feature Backlog
 

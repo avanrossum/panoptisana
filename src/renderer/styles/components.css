@@ -691,13 +691,6 @@
   font-style: italic;
 }
 
-.project-item-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
 /* ── Detail Panel (Sections & Fields) ── */
 .detail-panel {
   border-top: 1px solid var(--border-color);

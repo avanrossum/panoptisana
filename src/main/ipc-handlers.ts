@@ -299,14 +299,16 @@ export function registerIpcHandlers({ store, asanaApi, getMainWindow, getSetting
 
     // Check if item is currently pinned
     const settings = store.getSettings();
-    const pinnedList = (settings[pinKey] as string[]) || [];
+    const rawPinned = settings[pinKey];
+    const pinnedList = Array.isArray(rawPinned) ? rawPinned as string[] : [];
     const isPinned = pinnedList.includes(gid);
 
     const template: Electron.MenuItemConstructorOptions[] = [
       {
         label: isPinned ? 'Unpin' : 'Pin to Top',
         click: () => {
-          const current = (store.getSettings()[pinKey] as string[]) || [];
+          const rawCurrent = store.getSettings()[pinKey];
+          const current = Array.isArray(rawCurrent) ? rawCurrent as string[] : [];
           const updated = isPinned
             ? current.filter(g => g !== gid)
             : [...current, gid];

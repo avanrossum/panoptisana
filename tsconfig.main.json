@@ -17,6 +17,7 @@
     "src/shared/*.test.ts",
     "src/shared/applyTheme.ts",
     "src/shared/useThemeListener.ts",
+    "src/shared/useCopyToClipboard.ts",
     "src/shared/global.d.ts"
   ]
 }

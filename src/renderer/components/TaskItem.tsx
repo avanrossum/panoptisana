@@ -2,6 +2,7 @@ import { useState, useCallback, type ReactNode } from 'react';
 import Icon from './Icon';
 import { ICON_PATHS } from '../icons';
 import { formatDueDate, formatRelativeTime, parseCommentSegments } from '../../shared/formatters';
+import { useCopyToClipboard, useCopyToClipboardKeyed } from '../../shared/useCopyToClipboard';
 import type { AsanaTask, AsanaUser, AsanaComment, CompleteTaskResult } from '../../shared/types';
 
 // ── Props ───────────────────────────────────────────────────────
@@ -109,12 +110,12 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
   const [commentsExpanded, setCommentsExpanded] = useState(false);
   const [comments, setComments] = useState<AsanaComment[] | null>(null);
   const [loadingComments, setLoadingComments] = useState(false);
-  const [copiedGid, setCopiedGid] = useState(false);
-  const [copiedName, setCopiedName] = useState(false);
-  const [copiedUrl, setCopiedUrl] = useState(false);
-  const [copiedAssigneeGid, setCopiedAssigneeGid] = useState(false);
-  const [copiedProjectGid, setCopiedProjectGid] = useState<string | null>(null);
-  const [copiedSectionGid, setCopiedSectionGid] = useState<string | null>(null);
+  const [copiedGid, copyGid] = useCopyToClipboard();
+  const [copiedName, copyName] = useCopyToClipboard();
+  const [copiedUrl, copyUrl] = useCopyToClipboard();
+  const [copiedAssigneeGid, copyAssigneeGid] = useCopyToClipboard();
+  const [copiedProjectGid, copyProjectGid] = useCopyToClipboardKeyed<string>();
+  const [copiedSectionGid, copySectionGid] = useCopyToClipboardKeyed<string>();
   const [projectsExpanded, setProjectsExpanded] = useState(false);
   const [suppressHighlight, setSuppressHighlight] = useState(false);
   const [completeState, setCompleteState] = useState<CompleteState>('idle');
@@ -156,67 +157,6 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
     window.electronAPI.openUrl(url);
   }, [task.gid]);
 
-  const handleCopyGid = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(task.gid);
-      setCopiedGid(true);
-      setTimeout(() => setCopiedGid(false), 1500);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  }, [task.gid]);
-
-  const handleCopyName = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(task.name);
-      setCopiedName(true);
-      setTimeout(() => setCopiedName(false), 1500);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  }, [task.name]);
-
-  const handleCopyUrl = useCallback(async () => {
-    try {
-      const url = `https://app.asana.com/0/0/${task.gid}/f`;
-      await navigator.clipboard.writeText(url);
-      setCopiedUrl(true);
-      setTimeout(() => setCopiedUrl(false), 1500);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  }, [task.gid]);
-
-  const handleCopyAssigneeGid = useCallback(async () => {
-    if (!task.assignee?.gid) return;
-    try {
-      await navigator.clipboard.writeText(task.assignee.gid);
-      setCopiedAssigneeGid(true);
-      setTimeout(() => setCopiedAssigneeGid(false), 1500);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  }, [task.assignee?.gid]);
-
-  const handleCopyProjectGid = useCallback(async (projectGid: string) => {
-    try {
-      await navigator.clipboard.writeText(projectGid);
-      setCopiedProjectGid(projectGid);
-      setTimeout(() => setCopiedProjectGid(null), 1500);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  }, []);
-
-  const handleCopySectionGid = useCallback(async (sectionGid: string) => {
-    try {
-      await navigator.clipboard.writeText(sectionGid);
-      setCopiedSectionGid(sectionGid);
-      setTimeout(() => setCopiedSectionGid(null), 1500);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  }, []);
 
   const handleComplete = useCallback(async () => {
     if (completeState === 'idle') {
@@ -285,7 +225,7 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
       </span>
       <button
         className="task-inline-copy task-inline-copy-always"
-        onClick={(e) => { e.stopPropagation(); handleCopyProjectGid(pm.projectGid); }}
+        onClick={(e) => { e.stopPropagation(); copyProjectGid(pm.projectGid, pm.projectGid); }}
         title={copiedProjectGid === pm.projectGid ? 'Copied!' : `Copy project GID (${pm.projectGid})`}
       >
         <Icon path={ICON_PATHS.copy} size={11} />
@@ -300,7 +240,7 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
           {pm.sectionGid && (
             <button
               className="task-inline-copy task-inline-copy-always"
-              onClick={(e) => { e.stopPropagation(); handleCopySectionGid(pm.sectionGid!); }}
+              onClick={(e) => { e.stopPropagation(); copySectionGid(pm.sectionGid!, pm.sectionGid!); }}
               title={copiedSectionGid === pm.sectionGid ? 'Copied!' : `Copy section GID (${pm.sectionGid})`}
             >
               <Icon path={ICON_PATHS.copy} size={11} />
@@ -321,7 +261,7 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
             <span className="task-item-name">{task.name}</span>
             <button
               className="task-inline-copy task-inline-copy-always"
-              onClick={(e) => { e.stopPropagation(); handleCopyName(); }}
+              onClick={(e) => { e.stopPropagation(); copyName(task.name); }}
               title={copiedName ? 'Copied!' : 'Copy task name'}
             >
               <Icon path={ICON_PATHS.copy} size={12} />
@@ -334,7 +274,7 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
             <span className="task-item-gid">{task.gid}</span>
             <button
               className="task-inline-copy task-inline-copy-always"
-              onClick={(e) => { e.stopPropagation(); handleCopyGid(); }}
+              onClick={(e) => { e.stopPropagation(); copyGid(task.gid); }}
               title={copiedGid ? 'Copied!' : 'Copy task GID'}
             >
               <Icon path={ICON_PATHS.copy} size={12} />
@@ -354,7 +294,7 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
             {task.assignee && (
               <button
                 className="task-item-assignee-btn"
-                onClick={(e) => { e.stopPropagation(); handleCopyAssigneeGid(); }}
+                onClick={(e) => { e.stopPropagation(); if (task.assignee?.gid) copyAssigneeGid(task.assignee.gid); }}
                 title={copiedAssigneeGid ? 'Copied!' : `Copy assignee GID (${task.assignee.gid})`}
               >
                 {copiedAssigneeGid ? 'Copied!' : task.assignee.name}
@@ -409,7 +349,7 @@ export default function TaskItem({ task, lastSeenModified, onMarkSeen, onComplet
           <button className="task-btn primary" onClick={handleOpenTask}>
             Open Task
           </button>
-          <button className="task-btn secondary" onClick={handleCopyUrl}>
+          <button className="task-btn secondary" onClick={() => copyUrl(`https://app.asana.com/0/0/${task.gid}/f`)}>
             {copiedUrl ? 'Copied!' : 'Copy URL'}
           </button>
         </div>

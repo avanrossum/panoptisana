@@ -3,6 +3,7 @@ import Icon from './Icon';
 import { ICON_PATHS } from '../icons';
 import { filterAndSortProjects } from '../../shared/filters';
 import { formatRelativeTime } from '../../shared/formatters';
+import { useCopyToClipboard, useCopyToClipboardKeyed } from '../../shared/useCopyToClipboard';
 import { buildSectionsCsv, buildFieldsCsv } from '../../shared/csv';
 import type { AsanaProject, AsanaSection, AsanaField } from '../../shared/types';
 
@@ -95,56 +96,25 @@ export default function ProjectList({ projects, searchQuery, myProjectsOnly, cur
 }
 
 function ProjectItem({ project, isPinned, onTogglePin }: ProjectItemProps) {
-  const [copiedGid, setCopiedGid] = useState(false);
-  const [copiedName, setCopiedName] = useState(false);
-  const [copiedUrl, setCopiedUrl] = useState(false);
+  const [copiedGid, copyGid] = useCopyToClipboard();
+  const [copiedName, copyName] = useCopyToClipboard();
+  const [copiedUrl, copyUrl] = useCopyToClipboard();
   const [panelExpanded, setPanelExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<DetailTab>('sections');
 
   // Sections state
   const [sections, setSections] = useState<AsanaSection[] | null>(null);
   const [loadingSections, setLoadingSections] = useState(false);
-  const [copiedSectionGid, setCopiedSectionGid] = useState<string | null>(null);
+  const [copiedSectionGid, copySectionGid] = useCopyToClipboardKeyed<string>();
 
   // Fields state
   const [fields, setFields] = useState<AsanaField[] | null>(null);
   const [loadingFields, setLoadingFields] = useState(false);
-  const [copiedFieldGid, setCopiedFieldGid] = useState<string | null>(null);
+  const [copiedFieldGid, copyFieldGid] = useCopyToClipboardKeyed<string>();
 
   const handleOpenProject = useCallback(() => {
     const url = `https://app.asana.com/0/${project.gid}`;
     window.electronAPI.openUrl(url);
-  }, [project.gid]);
-
-  const handleCopyGid = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(project.gid);
-      setCopiedGid(true);
-      setTimeout(() => setCopiedGid(false), 1500);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  }, [project.gid]);
-
-  const handleCopyName = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(project.name);
-      setCopiedName(true);
-      setTimeout(() => setCopiedName(false), 1500);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  }, [project.name]);
-
-  const handleCopyUrl = useCallback(async () => {
-    try {
-      const url = `https://app.asana.com/0/${project.gid}`;
-      await navigator.clipboard.writeText(url);
-      setCopiedUrl(true);
-      setTimeout(() => setCopiedUrl(false), 1500);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
   }, [project.gid]);
 
   const handleTogglePanel = useCallback(async () => {
@@ -179,26 +149,6 @@ function ProjectItem({ project, isPinned, onTogglePin }: ProjectItemProps) {
     }
   }, [fields, project.gid]);
 
-  const handleCopySectionGid = useCallback(async (sectionGid: string) => {
-    try {
-      await navigator.clipboard.writeText(sectionGid);
-      setCopiedSectionGid(sectionGid);
-      setTimeout(() => setCopiedSectionGid(null), 1500);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  }, []);
-
-  const handleCopyFieldGid = useCallback(async (fieldGid: string) => {
-    try {
-      await navigator.clipboard.writeText(fieldGid);
-      setCopiedFieldGid(fieldGid);
-      setTimeout(() => setCopiedFieldGid(null), 1500);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  }, []);
-
   const handleExportSectionsCsv = useCallback(async () => {
     if (!sections || sections.length === 0) return;
     const csv = buildSectionsCsv(sections);
@@ -231,7 +181,7 @@ function ProjectItem({ project, isPinned, onTogglePin }: ProjectItemProps) {
             <span className="project-item-name">{project.name}</span>
             <button
               className="task-inline-copy task-inline-copy-always"
-              onClick={(e) => { e.stopPropagation(); handleCopyName(); }}
+              onClick={(e) => { e.stopPropagation(); copyName(project.name); }}
               title={copiedName ? 'Copied!' : 'Copy project name'}
             >
               <Icon path={ICON_PATHS.copy} size={12} />
@@ -244,7 +194,7 @@ function ProjectItem({ project, isPinned, onTogglePin }: ProjectItemProps) {
             <span className="project-item-gid">{project.gid}</span>
             <button
               className="task-inline-copy task-inline-copy-always"
-              onClick={(e) => { e.stopPropagation(); handleCopyGid(); }}
+              onClick={(e) => { e.stopPropagation(); copyGid(project.gid); }}
               title={copiedGid ? 'Copied!' : 'Copy project GID'}
             >
               <Icon path={ICON_PATHS.copy} size={12} />
@@ -262,7 +212,7 @@ function ProjectItem({ project, isPinned, onTogglePin }: ProjectItemProps) {
             )}
           </div>
         </div>
-        <div className="project-item-actions">
+        <div className="task-item-actions">
           <button
             className={`task-btn pin ${isPinned ? 'active' : ''}`}
             onClick={() => onTogglePin('project', project.gid)}
@@ -273,7 +223,7 @@ function ProjectItem({ project, isPinned, onTogglePin }: ProjectItemProps) {
           <button className="task-btn primary" onClick={handleOpenProject}>
             Open Project
           </button>
-          <button className="task-btn secondary" onClick={handleCopyUrl}>
+          <button className="task-btn secondary" onClick={() => copyUrl(`https://app.asana.com/0/${project.gid}`)}>
             {copiedUrl ? 'Copied!' : 'Copy URL'}
           </button>
         </div>
@@ -319,7 +269,7 @@ function ProjectItem({ project, isPinned, onTogglePin }: ProjectItemProps) {
                       <span className="section-item-name" title={section.name}>{section.name}</span>
                       <button
                         className="task-btn secondary"
-                        onClick={() => handleCopySectionGid(section.gid)}
+                        onClick={() => copySectionGid(section.gid, section.gid)}
                       >
                         {copiedSectionGid === section.gid ? 'Copied!' : 'Copy GID'}
                       </button>
@@ -350,7 +300,7 @@ function ProjectItem({ project, isPinned, onTogglePin }: ProjectItemProps) {
                       <span className="field-type">{field.type}</span>
                       <button
                         className="task-btn secondary"
-                        onClick={() => handleCopyFieldGid(field.gid)}
+                        onClick={() => copyFieldGid(field.gid, field.gid)}
                       >
                         {copiedFieldGid === field.gid ? 'Copied!' : 'Copy GID'}
                       </button>

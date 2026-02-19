@@ -6,10 +6,26 @@
 
 import type { AsanaTask, AsanaProject, ItemFilterType, Settings, SortBy } from './types';
 
-/** Minimal item shape required by applyItemFilters */
-interface FilterableItem {
+/** Minimal item shape shared across filter utilities */
+interface GidItem {
   gid: string;
+}
+
+/** Minimal item shape required by applyItemFilters */
+interface FilterableItem extends GidItem {
   name: string | null;
+}
+
+/**
+ * Stable partition: float pinned items to the top while preserving
+ * relative sort order within each group (pinned and unpinned).
+ */
+function applyPinnedPartition<T extends GidItem>(items: T[], pinnedGids?: string[]): T[] {
+  if (!pinnedGids || pinnedGids.length === 0) return items;
+  const pinSet = new Set(pinnedGids);
+  const pinned = items.filter(item => pinSet.has(item.gid));
+  const unpinned = items.filter(item => !pinSet.has(item.gid));
+  return [...pinned, ...unpinned];
 }
 
 interface TaskFilterOptions {
@@ -114,15 +130,7 @@ export function filterAndSortTasks(
     }
   });
 
-  // Float pinned items to the top (stable partition preserving sort order within each group)
-  if (pinnedGids && pinnedGids.length > 0) {
-    const pinSet = new Set(pinnedGids);
-    const pinned = result.filter(t => pinSet.has(t.gid));
-    const unpinned = result.filter(t => !pinSet.has(t.gid));
-    result = [...pinned, ...unpinned];
-  }
-
-  return result;
+  return applyPinnedPartition(result, pinnedGids);
 }
 
 /**
@@ -154,13 +162,5 @@ export function filterAndSortProjects(
   // Sort by name
   result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-  // Float pinned items to the top (stable partition preserving sort order within each group)
-  if (pinnedGids && pinnedGids.length > 0) {
-    const pinSet = new Set(pinnedGids);
-    const pinned = result.filter(p => pinSet.has(p.gid));
-    const unpinned = result.filter(p => !pinSet.has(p.gid));
-    result = [...pinned, ...unpinned];
-  }
-
-  return result;
+  return applyPinnedPartition(result, pinnedGids);
 }
