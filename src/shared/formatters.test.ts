@@ -215,6 +215,74 @@ describe('parseCommentSegments', () => {
     const profileSegment = result!.find(s => s.type === 'profile');
     expect(profileSegment!.value).toBe('Profile');
   });
+
+  // ── membershipMap (reverse lookup: membership GID → user name) ──
+  // Asana profile URLs use workspace membership GIDs (numeric), not user GIDs.
+  // The membershipMap maps user GID → membership GID. We build a reverse lookup
+  // so when the URL contains a membership GID, we can resolve it to a user name.
+
+  it('resolves membership GID in profile URL via membershipMap', () => {
+    // URL contains membership GID 112345, membershipMap maps user 12345 → 112345
+    const text = 'Thanks https://app.asana.com/1/999/profile/112345 for the help';
+    const membershipMap = { '12345': '112345' };
+    const result = parseCommentSegments(text, users, undefined, membershipMap);
+
+    const profileSegment = result!.find(s => s.type === 'profile');
+    expect(profileSegment!.value).toBe('Alice Smith');
+    expect(profileSegment!.userName).toBe('Alice Smith');
+  });
+
+  it('resolves multiple membership GIDs via membershipMap', () => {
+    const text = 'https://app.asana.com/1/999/profile/112345 and https://app.asana.com/1/999/profile/167890';
+    const membershipMap = { '12345': '112345', '67890': '167890' };
+    const result = parseCommentSegments(text, users, undefined, membershipMap);
+
+    const profiles = result!.filter(s => s.type === 'profile');
+    expect(profiles).toHaveLength(2);
+    expect(profiles[0].value).toBe('Alice Smith');
+    expect(profiles[1].value).toBe('Bob Jones');
+  });
+
+  it('prefers direct user GID match over membershipMap lookup', () => {
+    // URL contains '12345' which matches user GID directly — no need for membership lookup
+    const text = 'See https://app.asana.com/0/1/profile/12345 comment';
+    const membershipMap = { '12345': '112345' };
+    const result = parseCommentSegments(text, users, undefined, membershipMap);
+
+    const profileSegment = result!.find(s => s.type === 'profile');
+    expect(profileSegment!.value).toBe('Alice Smith');
+  });
+
+  it('falls back to "Profile" when membership GID has no matching user', () => {
+    const text = 'See https://app.asana.com/1/999/profile/999888 comment';
+    const membershipMap = { '12345': '112345' };
+    const result = parseCommentSegments(text, users, undefined, membershipMap);
+
+    const profileSegment = result!.find(s => s.type === 'profile');
+    expect(profileSegment!.value).toBe('Profile');
+  });
+
+  it('works with empty membershipMap', () => {
+    const text = 'See https://app.asana.com/1/999/profile/112345 comment';
+    const result = parseCommentSegments(text, users, undefined, {});
+
+    const profileSegment = result!.find(s => s.type === 'profile');
+    expect(profileSegment!.value).toBe('Profile');
+  });
+
+  it('combines htmlText and membershipMap resolution', () => {
+    // User 12345 (Alice) is in cachedUsers, resolved via membershipMap
+    // User 55555 (Lauren) is NOT in cachedUsers, resolved via htmlText
+    const text = 'https://app.asana.com/1/999/profile/112345 and https://app.asana.com/1/999/profile/55555';
+    const htmlText = '<body><a data-asana-gid="55555">@Lauren Lopez</a></body>';
+    const membershipMap = { '12345': '112345' };
+    const result = parseCommentSegments(text, users, htmlText, membershipMap);
+
+    const profiles = result!.filter(s => s.type === 'profile');
+    expect(profiles).toHaveLength(2);
+    expect(profiles[0].value).toBe('Alice Smith');
+    expect(profiles[1].value).toBe('Lauren Lopez');
+  });
 });
 
 // ── replaceMentionsWithLinks ─────────────────────────────────

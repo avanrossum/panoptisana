@@ -3,7 +3,7 @@ import Icon from './Icon';
 import { ICON_PATHS } from '../icons';
 import { formatDueDate, formatRelativeTime, buildProjectMemberships, type ProjectMembership } from '../../shared/formatters';
 import { useCopyToClipboard, useCopyToClipboardKeyed } from '../../shared/useCopyToClipboard';
-import type { AsanaTask, AsanaUser, CompleteTaskResult } from '../../shared/types';
+import type { AsanaTask, CompleteTaskResult } from '../../shared/types';
 
 // ── Props ───────────────────────────────────────────────────────
 
@@ -11,8 +11,6 @@ interface TaskItemProps {
   task: AsanaTask;
   lastSeenModified: string | undefined;
   onComplete: (taskGid: string) => void;
-  currentUserId: string | null;
-  cachedUsers: AsanaUser[];
   isPinned: boolean;
   onTogglePin: (type: 'task' | 'project', gid: string) => void;
   onOpenDetail: (taskGid: string) => void;

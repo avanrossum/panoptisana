@@ -501,8 +501,6 @@ export default function App() {
             selectedProjectGid={selectedProjectGid}
             seenTimestamps={seenTimestamps}
             onComplete={handleCompleteTask}
-            currentUserId={currentUserId}
-            cachedUsers={cachedUsers}
             pinnedGids={filterSettings.pinnedTaskGids}
             onTogglePin={handleTogglePin}
             onOpenDetail={handleOpenTaskDetail}

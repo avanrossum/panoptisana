@@ -63,6 +63,56 @@ export default function CommentComposer({ taskGid, cachedUsers, workspaceGid, us
     setMentionQuery(null);
   }, []);
 
+  // Insert selected @mention into textarea
+  const selectMention = useCallback((user: AsanaUser) => {
+    const start = mentionStartRef.current;
+    if (start < 0) return;
+
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const cursorPos = textarea.selectionStart;
+    const before = text.substring(0, start);
+    const after = text.substring(cursorPos);
+    const newText = `${before}@${user.name} ${after}`;
+
+    setText(newText);
+    setMentionQuery(null);
+
+    // Set cursor after the inserted mention
+    const newCursorPos = start + user.name.length + 2; // @name + space
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    });
+  }, [text]);
+
+  // Submit comment with @mention replacement
+  const handleSubmit = useCallback(async () => {
+    const trimmed = text.trim();
+    if (!trimmed || sending) return;
+
+    setSending(true);
+    setError(null);
+    setMentionQuery(null);
+
+    try {
+      const transformed = replaceMentionsWithLinks(trimmed, cachedUsers, workspaceGid || undefined, userMembershipMap);
+      const result = await window.electronAPI.addComment(taskGid, transformed);
+
+      if (result.success && result.comment) {
+        setText('');
+        onCommentAdded(result.comment);
+      } else {
+        setError(result.error || 'Failed to add comment');
+      }
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSending(false);
+    }
+  }, [text, sending, taskGid, cachedUsers, workspaceGid, userMembershipMap, onCommentAdded]);
+
   // Handle keyboard in textarea (for mention navigation)
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (mentionQuery !== null && mentionResults.length > 0) {
@@ -93,55 +143,7 @@ export default function CommentComposer({ taskGid, cachedUsers, workspaceGid, us
       e.preventDefault();
       handleSubmit();
     }
-  }, [mentionQuery, mentionResults, mentionIndex, text, sending]);
-
-  const selectMention = useCallback((user: AsanaUser) => {
-    const start = mentionStartRef.current;
-    if (start < 0) return;
-
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const cursorPos = textarea.selectionStart;
-    const before = text.substring(0, start);
-    const after = text.substring(cursorPos);
-    const newText = `${before}@${user.name} ${after}`;
-
-    setText(newText);
-    setMentionQuery(null);
-
-    // Set cursor after the inserted mention
-    const newCursorPos = start + user.name.length + 2; // @name + space
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    });
-  }, [text]);
-
-  const handleSubmit = useCallback(async () => {
-    const trimmed = text.trim();
-    if (!trimmed || sending) return;
-
-    setSending(true);
-    setError(null);
-    setMentionQuery(null);
-
-    try {
-      const transformed = replaceMentionsWithLinks(trimmed, cachedUsers, workspaceGid || undefined, userMembershipMap);
-      const result = await window.electronAPI.addComment(taskGid, transformed);
-
-      if (result.success && result.comment) {
-        setText('');
-        onCommentAdded(result.comment);
-      } else {
-        setError(result.error || 'Failed to add comment');
-      }
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setSending(false);
-    }
-  }, [text, sending, taskGid, cachedUsers, workspaceGid, userMembershipMap, onCommentAdded]);
+  }, [mentionQuery, mentionResults, mentionIndex, text, sending, handleSubmit, selectMention]);
 
   // Close mention dropdown on click outside
   useEffect(() => {

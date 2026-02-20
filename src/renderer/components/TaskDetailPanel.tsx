@@ -346,7 +346,7 @@ export default function TaskDetailPanel({
                         })}
                       </span>
                       <div className="comment-text">
-                        <CommentRenderer text={comment.text} htmlText={comment.html_text} users={cachedUsers} />
+                        <CommentRenderer text={comment.text} htmlText={comment.html_text} users={cachedUsers} membershipMap={userMembershipMap} />
                       </div>
                     </div>
                   ))}

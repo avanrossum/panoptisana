@@ -155,6 +155,9 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [x] `replaceMentionsWithLinks()` formatter with 9 tests
 - [x] `buildProjectMemberships()` moved to shared `formatters.ts`
 - [x] Removed inline comment toggle, comment-related state, and associated CSS
+- [x] Fix: Profile links in comments showed `[Profile]` instead of user names — Asana profile URLs use workspace membership GIDs (not user GIDs); added reverse membership map lookup in `parseCommentSegments()` with 6 new tests
+- [x] Fix: Stale closure in `CommentComposer.handleKeyDown` — missing `handleSubmit` and `selectMention` dependencies
+- [x] Cleanup: Removed dead `currentUserId` and `cachedUsers` props from TaskItem/TaskList (remnants of removed inline comment toggle)
 
 ## Up Next
 
@@ -294,3 +297,4 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - `app.dock.hide()` must be called before window creation
 - Global hotkey registration can fail silently if another app holds it
 - Asana `/tasks/search` endpoint does not support standard `next_page`/`offset` pagination — requires manual `created_at.after` pagination sorted ascending
+- Asana uses dual GID systems in comments: `text` field profile URLs contain workspace **membership GIDs**, while `html_text` `data-asana-gid` attributes contain **user GIDs** — name resolution requires a reverse membership map lookup

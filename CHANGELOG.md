@@ -21,11 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `buildProjectMemberships()` moved to shared `formatters.ts` for reuse across TaskItem and TaskDetailPanel
 - 9 new tests for `replaceMentionsWithLinks()` (single/multiple mentions, case-insensitive, unknown names, edge positions)
 - Demo mode: task detail returns lorem ipsum description, 2-3 demo subtasks, fabricated comment on submit
+- Membership GID reverse lookup in `parseCommentSegments()` — resolves Asana's workspace membership GIDs in profile URLs to display names via a three-source pipeline (user cache, html_text extraction, reverse membership map)
+- 6 new tests for membership GID resolution in comment parsing
+
+### Fixed
+- Profile links in comments rendered as `[Profile]` instead of user names — Asana profile URLs in comment `text` use workspace membership GIDs (not user GIDs), which weren't being resolved. Added reverse membership map lookup as a third name resolution source
+- Stale closure in `CommentComposer` — `handleKeyDown` callback was missing `handleSubmit` and `selectMention` from its dependency array, causing Ctrl+Enter submit and @mention selection to reference stale state
 
 ### Removed
 - Inline comment toggle on task items — replaced by the task detail panel
 - Comment-related state in TaskItem (`commentsExpanded`, `comments`, `loadingComments`, `suppressHighlight`)
 - `.comment-toggle`, `.comment-badge`, `.comments-section` CSS classes
+- Dead `currentUserId` and `cachedUsers` props from TaskItem and TaskList — only needed by the removed inline comment toggle
 
 ## [0.5.9] - 2026-02-19
 

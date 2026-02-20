@@ -100,17 +100,24 @@ function extractUsersFromHtml(htmlText: string): Record<string, string> {
  * Parse comment text to identify Asana profile links and general URLs.
  * Returns an array of segments: plain text strings and link descriptors.
  *
- * When `htmlText` is provided, user names are extracted from Asana's rich-text
- * markup as a supplemental lookup — this resolves profile links for users not
- * present in the workspace user cache (e.g. external collaborators, guests).
+ * Name resolution tries three sources in order:
+ * 1. `users` array (user GID → name from workspace cache)
+ * 2. `htmlText` (Asana's `data-asana-gid` attribute → name, for users not in cache)
+ * 3. `membershipMap` reverse lookup (membership GID → user name, because Asana
+ *    profile URLs in comment `text` use membership GIDs, not user GIDs)
  *
  * This is the pure logic layer — the React component wraps these segments
  * in <a> tags and click handlers.
  */
-export function parseCommentSegments(text: string | null | undefined, users: AsanaUser[], htmlText?: string): CommentSegment[] | null {
+export function parseCommentSegments(
+  text: string | null | undefined,
+  users: AsanaUser[],
+  htmlText?: string,
+  membershipMap?: Record<string, string>,
+): CommentSegment[] | null {
   if (!text) return null;
 
-  // Build user GID → name lookup from cached workspace users
+  // Build GID → name lookup from cached workspace users (keyed by user GID)
   const userMap: Record<string, string> = {};
   if (users && users.length > 0) {
     for (const u of users) {
@@ -118,7 +125,8 @@ export function parseCommentSegments(text: string | null | undefined, users: Asa
     }
   }
 
-  // Supplement with names extracted from html_text (covers users not in workspace cache)
+  // Supplement with names extracted from html_text (covers users not in workspace cache).
+  // html_text uses user GIDs in data-asana-gid attributes.
   if (htmlText) {
     const htmlUsers = extractUsersFromHtml(htmlText);
     for (const [gid, name] of Object.entries(htmlUsers)) {
@@ -128,12 +136,25 @@ export function parseCommentSegments(text: string | null | undefined, users: Asa
     }
   }
 
+  // Build reverse membership lookup: membership GID → user name.
+  // Asana profile URLs in the text field use membership GIDs (not user GIDs),
+  // so we need this to resolve names from URL-extracted GIDs.
+  const membershipToName: Record<string, string> = {};
+  if (membershipMap) {
+    for (const [userGid, membershipGid] of Object.entries(membershipMap)) {
+      const name = userMap[userGid];
+      if (name) {
+        membershipToName[membershipGid] = name;
+      }
+    }
+  }
+
   // Replace profile links with placeholder tokens
   const profileRegex = /https:\/\/app\.asana\.com\/\d+\/\d+\/profile\/(\d+)/g;
-  const profileMatches: { token: string; userGid: string; url: string }[] = [];
-  const processed = text.replace(profileRegex, (match, userGid: string) => {
+  const profileMatches: { token: string; profileGid: string; url: string }[] = [];
+  const processed = text.replace(profileRegex, (match, profileGid: string) => {
     const token = `__PROFILE_${profileMatches.length}__`;
-    profileMatches.push({ token, userGid, url: match });
+    profileMatches.push({ token, profileGid, url: match });
     return token;
   });
 
@@ -152,10 +173,12 @@ export function parseCommentSegments(text: string | null | undefined, users: Asa
 
     const profileMatch = profileMatches.find(p => p.token === part);
     if (profileMatch) {
+      // Try user GID first (old-style URLs), then membership GID (Asana's current format)
+      const resolvedName = userMap[profileMatch.profileGid] || membershipToName[profileMatch.profileGid] || null;
       segments.push({
         type: 'profile',
-        value: userMap[profileMatch.userGid] || 'Profile',
-        userName: userMap[profileMatch.userGid] || null,
+        value: resolvedName || 'Profile',
+        userName: resolvedName,
         url: profileMatch.url
       });
     } else if (/^https?:\/\//.test(part)) {
