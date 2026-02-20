@@ -529,21 +529,6 @@
   opacity: 0.85;
 }
 
-.task-btn.view {
-  background: var(--button-bg);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  padding: 3px 8px;
-}
-
-.task-btn.view:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
 /* ── Toggle Icon (reused by projects toggle and detail panel) ── */
 .comment-toggle-icon {
   transition: transform 0.15s ease;
@@ -621,6 +606,7 @@
   align-items: flex-start;
   padding: 8px 10px;
   gap: 8px;
+  cursor: pointer;
 }
 
 .project-color-dot {

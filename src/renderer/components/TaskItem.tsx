@@ -222,14 +222,6 @@ export default function TaskItem({ task, lastSeenModified, onComplete, isPinned,
             <Icon path={ICON_PATHS.pin} size={12} />
           </button>
           <button
-            className="task-btn view"
-            onClick={() => onOpenDetail(task.gid)}
-            title="View task details"
-          >
-            <Icon path={ICON_PATHS.eye} size={12} />
-            <span>View</span>
-          </button>
-          <button
             className={`task-btn ${completeState === 'confirming' ? 'confirm' : 'complete'}`}
             onClick={handleComplete}
             disabled={completeState === 'completing'}

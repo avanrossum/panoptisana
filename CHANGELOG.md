@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.7.0] - 2026-02-20
 
 ### Added
-- Project detail panel — full-width overlay accessible via the "View" button (eye icon) on project list items, showing project description, collaborators, and collapsible sections with lazy-loaded incomplete task lists
+- Project detail panel — full-width overlay accessible by clicking any project card, showing project description, collaborators, and collapsible sections with lazy-loaded incomplete task lists
 - Task custom fields — collapsible "Fields" section in the task detail panel (starts collapsed) showing all custom field names and display values from Asana
 - `ProjectDetailPanel` component with parallel data fetch for project detail and sections, lazy section task loading on first expand, status badge with color variants (green/yellow/red/blue), collaborator pill badges, and color-coded project dot
 - 2 new API endpoints: `getProjectDetail` (project notes, members, owner, status, color) and `getSectionTasks` (incomplete tasks per section with assignee)
@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Escape key priority updated: task detail > project detail > inbox
 - `projectDetailStack` navigation state in App.tsx — project detail opens below task detail in z-order so clicking a task from a project section opens the task detail on top
 - Demo mode: 4 custom fields on tasks (Priority, Story Points, Sprint, Target Release), project detail with description and 3 collaborators, 3 demo tasks per section
+
+### Changed
+- Task and project cards are now directly clickable to open their detail panels — consistent UX pattern across both tabs
+
+### Removed
+- "View" button on task items — task card header is now clickable (detail panel opens on click)
+- "View" button (eye icon) was never shipped on project items — project cards are clickable from the start
 
 ## [0.6.2] - 2026-02-20
 
@@ -54,7 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Task detail panel — full-width overlay replacing inline comment toggling, with description, subtasks, all comments, and project memberships
 - Subtask and parent task navigation — click subtasks to drill in, "subtask of" link to navigate to parent, back button to return
 - Comment composer with @mention support — type `@` to trigger a user dropdown, mentions converted to Asana profile links on submit
-- "View" button on task items — opens the detail panel (replaces the old comment toggle)
+- "View" button on task items — opens the detail panel (replaces the old comment toggle; later removed in v0.7.0 in favor of clickable task cards)
 - Inbox task clicks now open the task detail panel instead of opening Asana in a browser
 - "Open in Asana" button on each inbox notification — dedicated external link icon for opening in browser/Asana app
 - 3 new API endpoints: `getTaskDetail` (task with notes field), `getSubtasks`, `addComment` (POST story)

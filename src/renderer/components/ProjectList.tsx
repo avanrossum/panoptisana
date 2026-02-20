@@ -176,7 +176,7 @@ function ProjectItem({ project, isPinned, onTogglePin, onOpenDetail }: ProjectIt
 
   return (
     <div className={`project-item ${isPinned ? 'pinned' : ''}`} onContextMenu={handleContextMenu}>
-      <div className="project-item-header">
+      <div className="project-item-header" onClick={() => onOpenDetail(project.gid)}>
         <span className="project-color-dot" style={{ background: dotColor }} />
         <div className="project-item-content">
           {/* Project name row with copy button */}
@@ -215,16 +215,13 @@ function ProjectItem({ project, isPinned, onTogglePin, onOpenDetail }: ProjectIt
             )}
           </div>
         </div>
-        <div className="task-item-actions">
+        <div className="task-item-actions" onClick={(e) => e.stopPropagation()}>
           <button
             className={`task-btn pin ${isPinned ? 'active' : ''}`}
             onClick={() => onTogglePin('project', project.gid)}
             title={isPinned ? 'Unpin' : 'Pin to Top'}
           >
             <Icon path={ICON_PATHS.pin} size={12} />
-          </button>
-          <button className="task-btn secondary" onClick={() => onOpenDetail(project.gid)} title="View project details">
-            <Icon path={ICON_PATHS.eye} size={12} />
           </button>
           <button className="task-btn primary" onClick={handleOpenProject}>
             Open Project

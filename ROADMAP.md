@@ -146,7 +146,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [x] Task detail panel — full-width overlay (z-index 200) replacing inline comment toggling, with description, all subtasks, all comments, and project memberships
 - [x] Navigation stack (`taskDetailStack`) — drill into subtasks/parents with back button to return
 - [x] Comment composer with @mention dropdown — `@` triggers user search, mentions converted to Asana profile URLs on POST
-- [x] "View" button on task items — opens detail panel (replaces comment toggle)
+- [x] Task cards clickable to open detail panel (replaces comment toggle; "View" button added then removed in v0.7.0)
 - [x] Inbox task clicks open detail panel instead of external browser
 - [x] "Open in Asana" icon button on each inbox notification
 - [x] 3 new API endpoints: `getTaskDetail`, `getSubtasks`, `addComment`
@@ -181,7 +181,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [x] Task custom fields — collapsible "Fields" section (starts collapsed) in the task detail panel showing all custom field names and display values
 - [x] `ProjectDetailPanel` component with parallel data fetch, lazy section task loading, and status badge coloring
 - [x] 2 new API endpoints: `getProjectDetail` (project notes, members, status), `getSectionTasks` (incomplete tasks per section)
-- [x] "View" button (eye icon) on project list items opens the project detail panel
+- [x] Project and task cards are directly clickable to open their detail panels (no separate "View" button)
 - [x] Escape key priority: task detail > project detail > inbox
 - [x] `ProjectDetail`, `AsanaSectionTask`, `TaskCustomField` types
 
