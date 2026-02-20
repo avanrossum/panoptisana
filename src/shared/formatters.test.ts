@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDueDate, formatRelativeTime, parseCommentSegments, replaceMentionsWithLinks } from './formatters';
+import { formatDueDate, formatRelativeTime, parseCommentSegments, replaceMentionsWithLinks, extractTitleFromHtml, formatFileSize, isImageFilename } from './formatters';
 
 import type { AsanaUser } from './types';
 
@@ -376,5 +376,114 @@ describe('replaceMentionsWithLinks', () => {
   it('falls back to user GID when membershipMap is empty', () => {
     const result = replaceMentionsWithLinks('@Alice Smith', users, '9999', {});
     expect(result).toBe('https://app.asana.com/1/9999/profile/12345');
+  });
+});
+
+
+// ── extractTitleFromHtml ──────────────────────────────────────────────────
+
+describe('extractTitleFromHtml', () => {
+  it('extracts title from standard HTML', () => {
+    const html = '<html><head><title>My Page Title</title></head><body></body></html>';
+    const result = extractTitleFromHtml(html);
+    expect(result.title).toBe('My Page Title');
+    expect(result.siteName).toBeNull();
+  });
+
+  it('extracts og:site_name with property before content', () => {
+    const html = '<meta property="og:site_name" content="Adobe XD">';
+    const result = extractTitleFromHtml(html);
+    expect(result.siteName).toBe('Adobe XD');
+  });
+
+  it('extracts og:site_name with content before property', () => {
+    const html = '<meta content="Google Drive" property="og:site_name">';
+    const result = extractTitleFromHtml(html);
+    expect(result.siteName).toBe('Google Drive');
+  });
+
+  it('extracts both title and og:site_name', () => {
+    const html = '<html><head><title>Project Spec - Google Docs</title><meta property="og:site_name" content="Google Docs"></head></html>';
+    const result = extractTitleFromHtml(html);
+    expect(result.title).toBe('Project Spec - Google Docs');
+    expect(result.siteName).toBe('Google Docs');
+  });
+
+  it('returns nulls for empty HTML', () => {
+    const result = extractTitleFromHtml('');
+    expect(result.title).toBeNull();
+    expect(result.siteName).toBeNull();
+  });
+
+  it('returns nulls for HTML without title or og tags', () => {
+    const html = '<html><head></head><body><p>Hello</p></body></html>';
+    const result = extractTitleFromHtml(html);
+    expect(result.title).toBeNull();
+    expect(result.siteName).toBeNull();
+  });
+
+  it('trims whitespace from title', () => {
+    const html = '<title>  Spaced Title  </title>';
+    const result = extractTitleFromHtml(html);
+    expect(result.title).toBe('Spaced Title');
+  });
+
+  it('handles single-quoted og:site_name', () => {
+    const html = "<meta property='og:site_name' content='GitHub'>";
+    const result = extractTitleFromHtml(html);
+    expect(result.siteName).toBe('GitHub');
+  });
+});
+
+// ── formatFileSize ──────────────────────────────────────────
+
+describe('formatFileSize', () => {
+  it('returns empty string for null', () => {
+    expect(formatFileSize(null)).toBe('');
+  });
+
+  it('returns empty string for 0', () => {
+    expect(formatFileSize(0)).toBe('');
+  });
+
+  it('formats bytes', () => {
+    expect(formatFileSize(512)).toBe('512 B');
+  });
+
+  it('formats kilobytes', () => {
+    expect(formatFileSize(1024)).toBe('1 KB');
+    expect(formatFileSize(10240)).toBe('10 KB');
+  });
+
+  it('formats megabytes with one decimal', () => {
+    expect(formatFileSize(1048576)).toBe('1.0 MB');
+    expect(formatFileSize(2621440)).toBe('2.5 MB');
+  });
+});
+
+// ── isImageFilename ─────────────────────────────────────────
+
+describe('isImageFilename', () => {
+  it('recognizes common image extensions', () => {
+    expect(isImageFilename('photo.png')).toBe(true);
+    expect(isImageFilename('photo.jpg')).toBe(true);
+    expect(isImageFilename('photo.jpeg')).toBe(true);
+    expect(isImageFilename('animation.gif')).toBe(true);
+    expect(isImageFilename('modern.webp')).toBe(true);
+    expect(isImageFilename('icon.svg')).toBe(true);
+    expect(isImageFilename('legacy.bmp')).toBe(true);
+    expect(isImageFilename('favicon.ico')).toBe(true);
+  });
+
+  it('is case-insensitive', () => {
+    expect(isImageFilename('PHOTO.PNG')).toBe(true);
+    expect(isImageFilename('Photo.JPG')).toBe(true);
+  });
+
+  it('rejects non-image extensions', () => {
+    expect(isImageFilename('document.pdf')).toBe(false);
+    expect(isImageFilename('spreadsheet.xlsx')).toBe(false);
+    expect(isImageFilename('archive.zip')).toBe(false);
+    expect(isImageFilename('noext')).toBe(false);
   });
 });

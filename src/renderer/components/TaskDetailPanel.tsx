@@ -1,11 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Icon from './Icon';
 import CommentRenderer from './CommentRenderer';
+import DescriptionRenderer from './DescriptionRenderer';
 import CommentComposer from './CommentComposer';
+import AttachmentGrid from './AttachmentGrid';
 import { ICON_PATHS } from '../icons';
 import { formatDueDate, formatRelativeTime, buildProjectMemberships } from '../../shared/formatters';
 import { useCopyToClipboard, useCopyToClipboardKeyed } from '../../shared/useCopyToClipboard';
-import type { AsanaUser, AsanaComment, AsanaSubtask, TaskDetail, CompleteTaskResult } from '../../shared/types';
+import type { AsanaUser, AsanaComment, AsanaSubtask, AsanaAttachment, AsanaDependency, TaskDetail, CompleteTaskResult } from '../../shared/types';
 
 // ── Props ───────────────────────────────────────────────────────
 
@@ -26,17 +28,28 @@ type CompleteState = 'idle' | 'confirming' | 'completing';
 export default function TaskDetailPanel({
   taskGid, cachedUsers, workspaceGid, userMembershipMap, onClose, onNavigateToTask, onComplete
 }: TaskDetailPanelProps) {
+  // Section refs for jump-to navigation
+  const detailsRef = useRef<HTMLDivElement>(null);
+  const subtasksRef = useRef<HTMLDivElement>(null);
+  const commentsRef = useRef<HTMLDivElement>(null);
+  const latestCommentRef = useRef<HTMLDivElement>(null);
+
   // Data states
   const [detail, setDetail] = useState<TaskDetail | null>(null);
   const [comments, setComments] = useState<AsanaComment[] | null>(null);
   const [subtasks, setSubtasks] = useState<AsanaSubtask[] | null>(null);
+  const [attachments, setAttachments] = useState<AsanaAttachment[] | null>(null);
+  const [dependencies, setDependencies] = useState<AsanaDependency[] | null>(null);
+  const [dependents, setDependents] = useState<AsanaDependency[] | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [loadingComments, setLoadingComments] = useState(true);
   const [loadingSubtasks, setLoadingSubtasks] = useState(true);
+  const [loadingAttachments, setLoadingAttachments] = useState(true);
   const [detailError, setDetailError] = useState<string | null>(null);
 
   // UI states
   const [completeState, setCompleteState] = useState<CompleteState>('idle');
+  const [collapsedComments, setCollapsedComments] = useState<Set<string>>(new Set());
   const [copiedGid, copyGid] = useCopyToClipboard();
   const [copiedName, copyName] = useCopyToClipboard();
   const [copiedUrl, copyUrl] = useCopyToClipboard();
@@ -52,13 +65,18 @@ export default function TaskDetailPanel({
     setLoadingDetail(true);
     setLoadingComments(true);
     setLoadingSubtasks(true);
+    setLoadingAttachments(true);
     setDetailError(null);
     setDetail(null);
     setComments(null);
     setSubtasks(null);
+    setAttachments(null);
+    setDependencies(null);
+    setDependents(null);
     setCompleteState('idle');
+    setCollapsedComments(new Set());
 
-    // Fetch all three in parallel
+    // Fetch all in parallel
     window.electronAPI.getTaskDetail(taskGid)
       .then(d => { if (!cancelled) { setDetail(d); setLoadingDetail(false); } })
       .catch(err => { if (!cancelled) { setDetailError((err as Error).message); setLoadingDetail(false); } });
@@ -70,6 +88,18 @@ export default function TaskDetailPanel({
     window.electronAPI.getSubtasks(taskGid)
       .then(s => { if (!cancelled) { setSubtasks(s); setLoadingSubtasks(false); } })
       .catch(() => { if (!cancelled) { setSubtasks([]); setLoadingSubtasks(false); } });
+
+    window.electronAPI.getTaskAttachments(taskGid)
+      .then(a => { if (!cancelled) { setAttachments(a); setLoadingAttachments(false); } })
+      .catch(() => { if (!cancelled) { setAttachments([]); setLoadingAttachments(false); } });
+
+    window.electronAPI.getTaskDependencies(taskGid)
+      .then(d => { if (!cancelled) setDependencies(d); })
+      .catch(() => { if (!cancelled) setDependencies([]); });
+
+    window.electronAPI.getTaskDependents(taskGid)
+      .then(d => { if (!cancelled) setDependents(d); })
+      .catch(() => { if (!cancelled) setDependents([]); });
 
     return () => { cancelled = true; };
   }, [taskGid]);
@@ -123,6 +153,18 @@ export default function TaskDetailPanel({
     setComments(prev => prev ? [...prev, comment] : [comment]);
   }, []);
 
+  const toggleCommentCollapse = useCallback((commentGid: string) => {
+    setCollapsedComments(prev => {
+      const next = new Set(prev);
+      if (next.has(commentGid)) {
+        next.delete(commentGid);
+      } else {
+        next.add(commentGid);
+      }
+      return next;
+    });
+  }, []);
+
   // ── Derived Data ───────────────────────────────────────────
 
   const projectMemberships = detail ? buildProjectMemberships(detail) : [];
@@ -165,6 +207,35 @@ export default function TaskDetailPanel({
         </div>
       </div>
 
+      {/* Jump-to Nav */}
+      <div className="task-detail-nav">
+        <button
+          className="task-detail-nav-btn"
+          onClick={() => detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        >
+          Details
+        </button>
+        <button
+          className="task-detail-nav-btn"
+          onClick={() => subtasksRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        >
+          Subtasks{subtasks && subtasks.length > 0 ? ` (${subtasks.length})` : ''}
+        </button>
+        <button
+          className="task-detail-nav-btn"
+          onClick={() => commentsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        >
+          Comments{comments && comments.length > 0 ? ` (${comments.length})` : ''}
+        </button>
+        <button
+          className="task-detail-nav-btn"
+          onClick={() => latestCommentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          disabled={!comments || comments.length === 0}
+        >
+          Latest
+        </button>
+      </div>
+
       {/* Body */}
       <div className="task-detail-body">
         {detailError ? (
@@ -174,7 +245,7 @@ export default function TaskDetailPanel({
         ) : detail ? (
           <>
             {/* Meta Section */}
-            <div className="task-detail-section task-detail-meta">
+            <div ref={detailsRef} className="task-detail-section task-detail-meta">
               {/* Task Name with Copy */}
               <div className="task-detail-name-row">
                 <span className="task-detail-task-name">{detail.name}</span>
@@ -275,20 +346,79 @@ export default function TaskDetailPanel({
                   ))}
                 </div>
               )}
+
+              {/* Dependencies */}
+              {((dependencies && dependencies.length > 0) || (dependents && dependents.length > 0)) && (
+                <div className="task-detail-dependencies">
+                  {dependencies && dependencies.length > 0 && (
+                    <div className="task-detail-dependency-group">
+                      <span className="task-detail-dependency-label">Blocked by</span>
+                      {dependencies.map(dep => (
+                        <button
+                          key={dep.gid}
+                          className={`task-detail-subtask-item ${dep.completed ? 'completed' : ''}`}
+                          onClick={() => onNavigateToTask(dep.gid)}
+                        >
+                          <span className={`task-detail-subtask-check ${dep.completed ? 'checked' : ''}`}>
+                            {dep.completed ? '\u2713' : '\u25CB'}
+                          </span>
+                          <span className="task-detail-subtask-name">{dep.name}</span>
+                          {dep.assignee && (
+                            <span className="task-detail-subtask-assignee">{dep.assignee.name}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {dependents && dependents.length > 0 && (
+                    <div className="task-detail-dependency-group">
+                      <span className="task-detail-dependency-label">Blocking</span>
+                      {dependents.map(dep => (
+                        <button
+                          key={dep.gid}
+                          className={`task-detail-subtask-item ${dep.completed ? 'completed' : ''}`}
+                          onClick={() => onNavigateToTask(dep.gid)}
+                        >
+                          <span className={`task-detail-subtask-check ${dep.completed ? 'checked' : ''}`}>
+                            {dep.completed ? '\u2713' : '\u25CB'}
+                          </span>
+                          <span className="task-detail-subtask-name">{dep.name}</span>
+                          {dep.assignee && (
+                            <span className="task-detail-subtask-assignee">{dep.assignee.name}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Description Section */}
             <div className="task-detail-section">
               <div className="task-detail-section-title">Description</div>
               {detail.notes ? (
-                <div className="task-detail-description">{detail.notes}</div>
+                <div className="task-detail-description">
+                  <DescriptionRenderer text={detail.notes} htmlText={detail.html_notes} users={cachedUsers} membershipMap={userMembershipMap} />
+                </div>
               ) : (
                 <div className="task-detail-empty">No description</div>
               )}
             </div>
 
+            {/* Attachments Section */}
+            {!loadingAttachments && attachments && attachments.length > 0 && (
+              <div className="task-detail-section">
+                <div className="task-detail-section-title">
+                  Attachments
+                  <span className="task-detail-section-count">{attachments.length}</span>
+                </div>
+                <AttachmentGrid attachments={attachments} />
+              </div>
+            )}
+
             {/* Subtasks Section */}
-            <div className="task-detail-section">
+            <div ref={subtasksRef} className="task-detail-section">
               <div className="task-detail-section-title">
                 Subtasks
                 {subtasks && subtasks.length > 0 && (
@@ -326,7 +456,7 @@ export default function TaskDetailPanel({
             </div>
 
             {/* Comments Section */}
-            <div className="task-detail-section">
+            <div ref={commentsRef} className="task-detail-section">
               <div className="task-detail-section-title">
                 Comments
                 {comments && comments.length > 0 && (
@@ -337,19 +467,38 @@ export default function TaskDetailPanel({
                 <div className="task-detail-loading-inline">Loading comments...</div>
               ) : comments && comments.length > 0 ? (
                 <div className="task-detail-comment-list">
-                  {comments.map((comment, i) => (
-                    <div key={comment.gid || i} className="comment-item">
-                      <span className="comment-author">{comment.created_by?.name || 'Unknown'}</span>
-                      <span className="comment-date">
-                        {new Date(comment.created_at).toLocaleDateString('en-US', {
-                          month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
-                        })}
-                      </span>
-                      <div className="comment-text">
-                        <CommentRenderer text={comment.text} htmlText={comment.html_text} users={cachedUsers} membershipMap={userMembershipMap} />
+                  {comments.map((comment, i) => {
+                    const gid = comment.gid || String(i);
+                    const isCollapsed = collapsedComments.has(gid);
+                    const isLast = i === comments.length - 1;
+                    return (
+                      <div key={gid} ref={isLast ? latestCommentRef : undefined} className="comment-item">
+                        <div
+                          className="comment-item-header"
+                          onClick={() => toggleCommentCollapse(gid)}
+                        >
+                          <span className="comment-author">{comment.created_by?.name || 'Unknown'}</span>
+                          <span className="comment-date">
+                            {new Date(comment.created_at).toLocaleDateString('en-US', {
+                              month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                            })}
+                          </span>
+                          <button
+                            className={`comment-collapse-btn ${isCollapsed ? '' : 'expanded'}`}
+                            onClick={(e) => { e.stopPropagation(); toggleCommentCollapse(gid); }}
+                            title={isCollapsed ? 'Expand' : 'Collapse'}
+                          >
+                            <Icon path={ICON_PATHS.chevronRight} size={14} />
+                          </button>
+                        </div>
+                        {!isCollapsed && (
+                          <div className="comment-text">
+                            <CommentRenderer text={comment.text} htmlText={comment.html_text} users={cachedUsers} membershipMap={userMembershipMap} />
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="task-detail-empty">No comments yet</div>

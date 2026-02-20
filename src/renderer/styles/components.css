@@ -1216,6 +1216,40 @@
   flex-shrink: 0;
 }
 
+/* ── Jump-to Nav ── */
+.task-detail-nav {
+  display: flex;
+  gap: 2px;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  flex-shrink: 0;
+}
+
+.task-detail-nav-btn {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: var(--button-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.task-detail-nav-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+.task-detail-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* ── Body ── */
 .task-detail-body {
   flex: 1;
@@ -1550,4 +1584,169 @@
 .mention-dropdown-email {
   font-size: 10px;
   color: var(--text-muted);
+}
+
+
+/* ── Attachment Grid ──────────────────────────────────────────── */
+
+.attachment-grid-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-image-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.attachment-image-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+
+.attachment-image-item:hover {
+  border-color: var(--accent);
+}
+
+.attachment-image-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+}
+
+.attachment-image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.attachment-image-name {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attachment-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.attachment-file-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 11px;
+  color: var(--text-secondary);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.attachment-file-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+}
+
+.attachment-file-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--accent);
+}
+
+.attachment-file-size {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+
+/* ── Comment Collapse ─────────────────────────────────────────── */
+
+.comment-item-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.comment-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, transform 0.15s;
+}
+
+.comment-item:hover .comment-collapse-btn {
+  opacity: 1;
+}
+
+.comment-collapse-btn:hover {
+  color: var(--text-secondary);
+}
+
+.comment-collapse-btn.expanded {
+  transform: rotate(90deg);
+}
+
+
+/* ── Dependencies ────────────────────────────────────────────── */
+
+.task-detail-dependencies {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.task-detail-dependency-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.task-detail-dependency-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding-bottom: 2px;
 }

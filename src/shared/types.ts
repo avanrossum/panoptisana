@@ -89,6 +89,31 @@ export interface AddCommentResult {
   error?: string;
 }
 
+export interface LinkPreview {
+  url: string;
+  title: string | null;
+  siteName: string | null;
+}
+
+export interface AsanaAttachment {
+  gid: string;
+  name: string;
+  download_url: string | null;
+  view_url: string | null;
+  permanent_url: string | null;
+  host: string;
+  resource_subtype: string;
+  size: number | null;
+  created_at: string;
+}
+
+export interface AsanaDependency {
+  gid: string;
+  name: string;
+  completed: boolean;
+  assignee: { gid: string; name: string } | null;
+}
+
 export interface AsanaSection {
   gid: string;
   name: string;
@@ -200,6 +225,9 @@ export interface AsanaAPILike {
   getProjectFields(projectGid: string): Promise<AsanaField[]>;
   getTaskDetail(taskGid: string): Promise<TaskDetail>;
   getSubtasks(taskGid: string): Promise<AsanaSubtask[]>;
+  getTaskAttachments(taskGid: string): Promise<AsanaAttachment[]>;
+  getTaskDependencies(taskGid: string): Promise<AsanaDependency[]>;
+  getTaskDependents(taskGid: string): Promise<AsanaDependency[]>;
   addComment(taskGid: string, text: string): Promise<AsanaComment>;
   completeTask(taskGid: string): Promise<{ data: unknown }>;
   startPolling(interval: number, onUpdate: PollCallback, onPollStarted?: PollStartedCallback): void;
@@ -274,6 +302,9 @@ export interface IpcInvokeChannelMap {
   'asana:get-project-fields': { args: [projectGid: string];                 return: AsanaField[] };
   'asana:get-task-detail':    { args: [taskGid: string];                     return: TaskDetail };
   'asana:get-subtasks':       { args: [taskGid: string];                     return: AsanaSubtask[] };
+  'asana:get-task-attachments': { args: [taskGid: string];                   return: AsanaAttachment[] };
+  'asana:get-task-dependencies': { args: [taskGid: string];                  return: AsanaDependency[] };
+  'asana:get-task-dependents': { args: [taskGid: string];                    return: AsanaDependency[] };
   'asana:add-comment':        { args: [taskGid: string, text: string];       return: AddCommentResult };
   'asana:complete-task':      { args: [taskGid: string];                     return: CompleteTaskResult };
   'asana:refresh':            { args: [];                                    return: void };
@@ -293,6 +324,7 @@ export interface IpcInvokeChannelMap {
   'app:download-update':      { args: [];                                    return: void };
   'app:restart-for-update':   { args: [];                                    return: void };
   'app:export-csv':           { args: [filename: string, csv: string];       return: boolean };
+  'app:fetch-link-preview':   { args: [url: string];                         return: LinkPreview };
 
   'update-dialog:get-init-data': { args: [];                                 return: UpdateDialogInitData | null };
 }
@@ -307,6 +339,7 @@ export interface IpcSendChannelMap {
   'app:apply-accent':         { args: [accent: string] };
   'app:re-register-hotkey':   { args: [] };
   'context-menu:item':        { args: [item: ContextMenuItem] };
+  'context-menu:link':        { args: [url: string] };
   'update-dialog:close':      { args: [] };
 }
 
@@ -339,12 +372,18 @@ export interface ElectronAPI {
   getProjectFields(projectGid: string): Promise<AsanaField[]>;
   getTaskDetail(taskGid: string): Promise<TaskDetail>;
   getSubtasks(taskGid: string): Promise<AsanaSubtask[]>;
+  getTaskAttachments(taskGid: string): Promise<AsanaAttachment[]>;
+  getTaskDependencies(taskGid: string): Promise<AsanaDependency[]>;
+  getTaskDependents(taskGid: string): Promise<AsanaDependency[]>;
   addComment(taskGid: string, text: string): Promise<AddCommentResult>;
   completeTask(taskGid: string): Promise<CompleteTaskResult>;
   refreshData(): Promise<void>;
 
   // Export
   exportCsv(filename: string, csv: string): Promise<boolean>;
+
+  // Link previews
+  fetchLinkPreview(url: string): Promise<LinkPreview>;
 
   // API key
   verifyApiKey(key: string): Promise<VerifyApiKeyResult>;
@@ -364,6 +403,7 @@ export interface ElectronAPI {
 
   // Context menu
   showItemContextMenu(item: ContextMenuItem): void;
+  showLinkContextMenu(url: string): void;
 
   // Window controls
   hideWindow(): void;

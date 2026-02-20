@@ -11,7 +11,7 @@ interface DueDateResult {
   isOverdue: boolean;
 }
 
-interface CommentSegment {
+export interface CommentSegment {
   type: 'text' | 'profile' | 'url';
   value: string;
   userName?: string | null;
@@ -229,6 +229,40 @@ export function replaceMentionsWithLinks(
   }
 
   return result;
+}
+
+// ── Link Preview Helpers ────────────────────────────────────────────────────
+
+/**
+ * Extract page title and Open Graph site name from raw HTML.
+ * Uses regex rather than a DOM parser — safe for use in the main process.
+ */
+export function extractTitleFromHtml(html: string): { title: string | null; siteName: string | null } {
+  // Extract <title>...</title>
+  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+  const title = titleMatch ? titleMatch[1].trim() : null;
+
+  // Extract <meta property="og:site_name" content="...">
+  const ogMatch = html.match(/<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']+)["'][^>]*>/i)
+    || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:site_name["'][^>]*>/i);
+  const siteName = ogMatch ? ogMatch[1].trim() : null;
+
+  return { title, siteName };
+}
+
+// ── Attachment Helpers ───────────────────────────────────────────────────────
+
+/** Format byte size as a human-readable string. */
+export function formatFileSize(bytes: number | null): string {
+  if (bytes === null || bytes === 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/** Check if a filename has an image extension. */
+export function isImageFilename(name: string): boolean {
+  return /\.(png|jpe?g|gif|webp|svg|bmp|ico)$/i.test(name);
 }
 
 // ── Project Membership Helpers ──────────────────────────────────────────────

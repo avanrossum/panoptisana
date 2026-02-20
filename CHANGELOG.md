@@ -5,6 +5,36 @@ All notable changes to Panoptisana will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2026-02-20
+
+### Added
+- Jump-to navigation bar — fixed pill-button bar between header and body with "Details", "Subtasks (N)", "Comments (N)", and "Latest" buttons for smooth-scrolling to each section in the task detail panel
+- Task dependencies — "Blocked by" and "Blocking" sections in the task detail meta area, showing dependency/dependent tasks with completion status and assignee, clickable to navigate into the dependency
+- 2 new API endpoints: `getTaskDependencies` and `getTaskDependents` (on-demand fetch when panel opens)
+- Demo mode: 1 demo dependency ("Finalize API schema", completed) and 1 demo dependent ("Deploy to production", incomplete)
+
+## [0.6.1] - 2026-02-20
+
+### Added
+- Attachment grid — images displayed in a 2-column CSS grid with lazy-loaded thumbnails, non-image files in a list with host icon, filename, and formatted size. Click opens in browser, right-click context menu for links. Expired download URLs show a placeholder instead of broken images
+- Comment collapse — chevron toggle on each comment header to collapse/expand the comment body, reducing visual noise on image-heavy or lengthy comment threads
+- `AttachmentGrid` component with image grid and file list rendering
+- `formatFileSize()` and `isImageFilename()` pure functions in `formatters.ts` with 10 tests
+- 1 new API endpoint: `getTaskAttachments` (on-demand fetch when panel opens)
+- `AsanaAttachment` type with `host`, `resource_subtype`, `size`, `download_url`, `view_url` fields
+- Demo mode: 2 placeholder images and 1 PDF attachment
+
+## [0.6.0] - 2026-02-20
+
+### Added
+- Clickable links in task descriptions — description now rendered via `DescriptionRenderer` component with full URL parsing, profile link resolution, and @mention display (previously plain text)
+- Link preview titles — URLs in descriptions lazy-fetch the page `<title>` and `og:site_name` after a 300ms delay, displaying as `[SiteName | Title]` instead of truncated URLs. Session-scoped cache in main process prevents redundant fetches
+- Right-click context menu on links — "Open Link" and "Copy Link URL" native context menu on all clickable links in comments and descriptions
+- `DescriptionRenderer` component wrapping `parseCommentSegments` with lazy link preview fetching
+- `extractTitleFromHtml()` pure function in `formatters.ts` with 8 tests
+- `LinkPreview` type and `app:fetch-link-preview` IPC handler with 5s timeout and 32KB HTML read limit
+- `context-menu:link` IPC channel with native `Menu` for link context menus
+
 ## [0.5.10] - 2026-02-19
 
 ### Added

@@ -6,7 +6,7 @@
 
 import type { Store } from './store';
 import type {
-  AsanaUser, AsanaComment, AsanaStory, AsanaSection, AsanaField, AsanaWorkspace,
+  AsanaUser, AsanaComment, AsanaStory, AsanaSection, AsanaField, AsanaWorkspace, AsanaAttachment, AsanaDependency,
   AsanaTask, AsanaSubtask, TaskDetail, VerifyApiKeyResult, InboxNotification,
   PollCallback, PollStartedCallback, AsanaAPILike
 } from '../shared/types';
@@ -68,6 +68,68 @@ export class DemoAsanaAPI implements AsanaAPILike {
       modified_at: task?.modified_at || new Date().toISOString(),
       num_subtasks: task?.num_subtasks,
     };
+  }
+
+  async getTaskDependencies(_taskGid: string): Promise<AsanaDependency[]> {
+    return [
+      {
+        gid: '7200000000000001',
+        name: 'Finalize API schema',
+        completed: true,
+        assignee: { gid: '2000000000000002', name: 'Jordan Lee' },
+      },
+    ];
+  }
+
+  async getTaskDependents(_taskGid: string): Promise<AsanaDependency[]> {
+    return [
+      {
+        gid: '7200000000000002',
+        name: 'Deploy to production',
+        completed: false,
+        assignee: { gid: DEMO_CURRENT_USER.gid, name: DEMO_CURRENT_USER.name },
+      },
+    ];
+  }
+
+  async getTaskAttachments(_taskGid: string): Promise<AsanaAttachment[]> {
+    const now = new Date();
+    const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    return [
+      {
+        gid: '7100000000000001',
+        name: 'wireframe-v2.png',
+        download_url: 'https://placehold.co/800x600/2a2a2a/888?text=Wireframe+v2',
+        view_url: 'https://placehold.co/800x600/2a2a2a/888?text=Wireframe+v2',
+        permanent_url: null,
+        host: 'asana',
+        resource_subtype: 'asana',
+        size: 245760,
+        created_at: dayAgo.toISOString(),
+      },
+      {
+        gid: '7100000000000002',
+        name: 'screenshot-bug.jpg',
+        download_url: 'https://placehold.co/400x300/1a1a2e/888?text=Bug+Screenshot',
+        view_url: 'https://placehold.co/400x300/1a1a2e/888?text=Bug+Screenshot',
+        permanent_url: null,
+        host: 'asana',
+        resource_subtype: 'asana',
+        size: 102400,
+        created_at: now.toISOString(),
+      },
+      {
+        gid: '7100000000000003',
+        name: 'project-brief.pdf',
+        download_url: null,
+        view_url: 'https://example.com/project-brief.pdf',
+        permanent_url: null,
+        host: 'asana',
+        resource_subtype: 'asana',
+        size: 1048576,
+        created_at: dayAgo.toISOString(),
+      },
+    ];
   }
 
   async getSubtasks(_taskGid: string): Promise<AsanaSubtask[]> {

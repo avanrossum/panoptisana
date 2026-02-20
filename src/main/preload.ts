@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import type { ElectronAPI, PollDataPacket, MaskedSettings, ResolvedTheme } from '../shared/types';
+import type { ElectronAPI, PollDataPacket, MaskedSettings, ResolvedTheme, LinkPreview } from '../shared/types';
 
 const electronAPI: ElectronAPI = {
   // ── Settings ────────────────────────────────────────────────
@@ -17,6 +17,9 @@ const electronAPI: ElectronAPI = {
   getProjectFields: (projectGid) => ipcRenderer.invoke('asana:get-project-fields', projectGid),
   getTaskDetail: (taskGid) => ipcRenderer.invoke('asana:get-task-detail', taskGid),
   getSubtasks: (taskGid) => ipcRenderer.invoke('asana:get-subtasks', taskGid),
+  getTaskAttachments: (taskGid) => ipcRenderer.invoke('asana:get-task-attachments', taskGid),
+  getTaskDependencies: (taskGid) => ipcRenderer.invoke('asana:get-task-dependencies', taskGid),
+  getTaskDependents: (taskGid) => ipcRenderer.invoke('asana:get-task-dependents', taskGid),
   addComment: (taskGid, text) => ipcRenderer.invoke('asana:add-comment', taskGid, text),
   completeTask: (taskGid) => ipcRenderer.invoke('asana:complete-task', taskGid),
   refreshData: () => ipcRenderer.invoke('asana:refresh'),
@@ -42,6 +45,7 @@ const electronAPI: ElectronAPI = {
 
   // ── Context Menu ────────────────────────────────────────────
   showItemContextMenu: ({ type, name, gid }) => ipcRenderer.send('context-menu:item', { type, name, gid }),
+  showLinkContextMenu: (url) => ipcRenderer.send('context-menu:link', url),
 
   // ── Window Controls ─────────────────────────────────────────
   hideWindow: () => ipcRenderer.send('window:hide'),
@@ -51,6 +55,7 @@ const electronAPI: ElectronAPI = {
   getVersion: () => ipcRenderer.invoke('app:get-version'),
   checkForUpdates: () => ipcRenderer.invoke('app:check-for-updates'),
   openUrl: (url) => ipcRenderer.invoke('app:open-url', url),
+  fetchLinkPreview: (url) => ipcRenderer.invoke('app:fetch-link-preview', url) as Promise<LinkPreview>,
   quit: () => ipcRenderer.send('app:quit'),
 
   // ── Theme ───────────────────────────────────────────────────

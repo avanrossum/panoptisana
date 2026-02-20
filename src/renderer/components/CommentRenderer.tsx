@@ -35,6 +35,10 @@ export default function CommentRenderer({ text, htmlText, users, membershipMap }
             e.preventDefault();
             window.electronAPI.openUrl(seg.url!);
           }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            window.electronAPI.showLinkContextMenu(seg.url!);
+          }}
           title="Open profile in Asana"
         >
           [{seg.value}]
@@ -49,6 +53,10 @@ export default function CommentRenderer({ text, htmlText, users, membershipMap }
           onClick={(e) => {
             e.preventDefault();
             window.electronAPI.openUrl(seg.url!);
+          }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            window.electronAPI.showLinkContextMenu(seg.url!);
           }}
           title={seg.url}
         >

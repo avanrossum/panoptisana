@@ -4,7 +4,7 @@
 
 Open-source Asana task and project visibility tool for macOS. Displays a searchable list of incomplete tasks and active projects with comment tracking and auto-updates.
 
-## Current Version: 0.5.10
+## Current Version: 0.6.2
 
 ### Core Features (v0.1.0)
 - [x] Searchable task list with sorting
@@ -158,6 +158,23 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [x] Fix: Profile links in comments showed `[Profile]` instead of user names — Asana profile URLs use workspace membership GIDs (not user GIDs); added reverse membership map lookup in `parseCommentSegments()` with 6 new tests
 - [x] Fix: Stale closure in `CommentComposer.handleKeyDown` — missing `handleSubmit` and `selectMention` dependencies
 - [x] Cleanup: Removed dead `currentUserId` and `cachedUsers` props from TaskItem/TaskList (remnants of removed inline comment toggle)
+
+### v0.6.0 Additions
+- [x] Clickable links in task descriptions — description rendered via `DescriptionRenderer` component with full URL parsing, profile link resolution, and @mention display (previously plain text)
+- [x] Link preview titles — URLs in descriptions lazy-fetch `<title>` and `og:site_name` after 300ms, displaying as `[SiteName | Title]` instead of truncated URLs. Session-scoped cache in main process
+- [x] Right-click context menu on links — native "Open Link" / "Copy Link URL" on all clickable links in comments and descriptions
+- [x] `DescriptionRenderer` component, `extractTitleFromHtml()` formatter with 8 tests, `LinkPreview` type, `app:fetch-link-preview` IPC handler
+
+### v0.6.1 Additions
+- [x] Attachment grid — images in 2-column CSS grid with lazy-loaded thumbnails, non-image files in a list with formatted size. Expired download URLs show placeholder. Right-click context menu on attachment links
+- [x] Comment collapse — chevron toggle on each comment to collapse/expand body text
+- [x] `AttachmentGrid` component, `formatFileSize()` and `isImageFilename()` formatters with 10 tests
+- [x] `AsanaAttachment` type, `getTaskAttachments` API endpoint (on-demand)
+
+### v0.6.2 Additions
+- [x] Jump-to navigation bar — fixed pill-button bar with "Details", "Subtasks (N)", "Comments (N)", "Latest" for smooth-scrolling to sections in the task detail panel
+- [x] Task dependencies — "Blocked by" and "Blocking" sections in task detail meta, clickable to navigate into dependency tasks
+- [x] `AsanaDependency` type, `getTaskDependencies` and `getTaskDependents` API endpoints (on-demand)
 
 ## Up Next
 

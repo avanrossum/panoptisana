@@ -6,7 +6,7 @@
 
 import type {
   AsanaTask, AsanaProject, AsanaUser, AsanaComment, AsanaStory, AsanaSection, AsanaField,
-  AsanaWorkspace, VerifyApiKeyResult, InboxNotification, TaskDetail, AsanaSubtask,
+  AsanaWorkspace, AsanaAttachment, AsanaDependency, VerifyApiKeyResult, InboxNotification, TaskDetail, AsanaSubtask,
   PollCallback, PollStartedCallback
 } from '../shared/types';
 import type { Store } from './store';
@@ -249,6 +249,21 @@ export class AsanaAPI {
   async getSubtasks(taskGid: string): Promise<AsanaSubtask[]> {
     const fields = 'name,completed,assignee.name,assignee.gid,due_on';
     return this._fetchAll<AsanaSubtask>(`/tasks/${taskGid}/subtasks?opt_fields=${fields}`);
+  }
+
+  async getTaskAttachments(taskGid: string): Promise<AsanaAttachment[]> {
+    const fields = 'name,download_url,view_url,permanent_url,host,resource_subtype,size,created_at';
+    return this._fetchAll<AsanaAttachment>(`/tasks/${taskGid}/attachments?opt_fields=${fields}`);
+  }
+
+  async getTaskDependencies(taskGid: string): Promise<AsanaDependency[]> {
+    const fields = 'name,completed,assignee.name,assignee.gid';
+    return this._fetchAll<AsanaDependency>(`/tasks/${taskGid}/dependencies?opt_fields=${fields}`);
+  }
+
+  async getTaskDependents(taskGid: string): Promise<AsanaDependency[]> {
+    const fields = 'name,completed,assignee.name,assignee.gid';
+    return this._fetchAll<AsanaDependency>(`/tasks/${taskGid}/dependents?opt_fields=${fields}`);
   }
 
   async addComment(taskGid: string, text: string): Promise<AsanaComment> {

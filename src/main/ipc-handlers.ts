@@ -3,7 +3,8 @@ import { execFile } from 'child_process';
 import fs from 'fs';
 
 import type { Store } from './store';
-import type { MaskedSettings, ContextMenuItem, BrowserInfo, AsanaAPILike } from '../shared/types';
+import type { MaskedSettings, ContextMenuItem, BrowserInfo, AsanaAPILike, LinkPreview } from '../shared/types';
+import { extractTitleFromHtml } from '../shared/formatters';
 
 /** Send masked settings to the main renderer so it can re-apply client-side filters */
 export function broadcastSettingsToRenderer(store: Store, getMainWindow: () => BrowserWindow | null): void {
@@ -208,6 +209,36 @@ export function registerIpcHandlers({ store, asanaApi, getMainWindow, getSetting
     }
   });
 
+  ipcMain.handle('asana:get-task-attachments', async (_, taskGid: string) => {
+    if (!taskGid || typeof taskGid !== 'string') return [];
+    try {
+      return await asanaApi.getTaskAttachments(taskGid);
+    } catch (err) {
+      console.error('[ipc] Failed to fetch attachments:', (err as Error).message);
+      return [];
+    }
+  });
+
+  ipcMain.handle('asana:get-task-dependencies', async (_, taskGid: string) => {
+    if (!taskGid || typeof taskGid !== 'string') return [];
+    try {
+      return await asanaApi.getTaskDependencies(taskGid);
+    } catch (err) {
+      console.error('[ipc] Failed to fetch dependencies:', (err as Error).message);
+      return [];
+    }
+  });
+
+  ipcMain.handle('asana:get-task-dependents', async (_, taskGid: string) => {
+    if (!taskGid || typeof taskGid !== 'string') return [];
+    try {
+      return await asanaApi.getTaskDependents(taskGid);
+    } catch (err) {
+      console.error('[ipc] Failed to fetch dependents:', (err as Error).message);
+      return [];
+    }
+  });
+
   ipcMain.handle('asana:add-comment', async (_, taskGid: string, text: string) => {
     if (!taskGid || typeof taskGid !== 'string') return { success: false, error: 'Invalid task GID' };
     if (!text || typeof text !== 'string') return { success: false, error: 'Empty comment text' };
@@ -349,6 +380,67 @@ export function registerIpcHandlers({ store, asanaApi, getMainWindow, getSetting
     }
   });
 
+  // ── Link Preview ─────────────────────────────────────────
+
+  const linkPreviewCache = new Map<string, LinkPreview>();
+
+  ipcMain.handle('app:fetch-link-preview', async (_, url: string): Promise<LinkPreview> => {
+    const empty: LinkPreview = { url, title: null, siteName: null };
+    if (!url || typeof url !== 'string') return empty;
+
+    // Return cached result if available
+    const cached = linkPreviewCache.get(url);
+    if (cached) return cached;
+
+    try {
+      // Validate URL
+      const parsed = new URL(url);
+      if (!['http:', 'https:'].includes(parsed.protocol)) return empty;
+
+      // Fetch with 5s timeout — only need the head of the HTML for <title> and og:site_name
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'Panoptisana Link Preview' },
+        redirect: 'follow'
+      });
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        linkPreviewCache.set(url, empty);
+        return empty;
+      }
+
+      // Read only the first 32KB — title and og tags are always in <head>
+      const reader = response.body?.getReader();
+      if (!reader) {
+        linkPreviewCache.set(url, empty);
+        return empty;
+      }
+
+      let html = '';
+      const decoder = new TextDecoder();
+      const maxBytes = 32768;
+
+      while (html.length < maxBytes) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        html += decoder.decode(value, { stream: true });
+      }
+      reader.cancel().catch(() => {});
+
+      const { title, siteName } = extractTitleFromHtml(html);
+      const result: LinkPreview = { url, title, siteName };
+      linkPreviewCache.set(url, result);
+      return result;
+    } catch {
+      linkPreviewCache.set(url, empty);
+      return empty;
+    }
+  });
+
   ipcMain.handle('app:detect-browsers', (): BrowserInfo[] => {
     const browsers: BrowserInfo[] = [];
 
@@ -427,5 +519,36 @@ export function registerIpcHandlers({ store, asanaApi, getMainWindow, getSetting
     ];
     const menu = Menu.buildFromTemplate(template);
     menu.popup({ window: getMainWindow() || undefined });
+  });
+
+  // ── Link Context Menu ──────────────────────────────────────
+
+  ipcMain.on('context-menu:link', (_, url: string) => {
+    if (!url || typeof url !== 'string') return;
+
+    const settings = store.getSettings();
+    const openWith = settings.openLinksIn || 'default';
+
+    const openLink = () => {
+      if (openWith === 'asana-desktop' && url.startsWith('https://app.asana.com')) {
+        const asanaUrl = url.replace(/^https?:\/\/app\.asana\.com/, 'asana:/');
+        shell.openExternal(asanaUrl).catch(() => {
+          shell.openExternal(url).catch(() => {});
+        });
+      } else if (openWith === 'default') {
+        shell.openExternal(url).catch(() => {});
+      } else {
+        execFile('open', ['-b', openWith, url], (err) => {
+          if (err) shell.openExternal(url).catch(() => {});
+        });
+      }
+    };
+
+    const linkMenu = Menu.buildFromTemplate([
+      { label: 'Open Link', click: openLink },
+      { type: 'separator' },
+      { label: 'Copy Link URL', click: () => clipboard.writeText(url) }
+    ]);
+    linkMenu.popup({ window: getMainWindow() || undefined });
   });
 }
