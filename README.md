@@ -140,6 +140,10 @@ Panoptisana is an Electron app with a React renderer. The main process handles A
 
 See [ROADMAP.md](ROADMAP.md) for planned features and [CHANGELOG.md](CHANGELOG.md) for version history.
 
+## Development Methodology
+
+Panoptisana is built using AI-assisted development with structured engineering practices. Every feature follows a full software development lifecycle: requirements are captured in a living roadmap, architecture decisions and lessons learned are documented in session context files, and a shared set of design standards (coding conventions, style guides, and testing standards) governs consistency across projects. AI tooling accelerates implementation, but the engineering rigor is human-driven: clear specifications, incremental commits, extracted and tested pure logic, CI/CD gates (lint + test on every push), and a release script that enforces quality checks before any build ships. The methodology treats AI as a collaborator operating within well-defined constraints, not as an autonomous agent -- the standards, architecture documentation, and accumulated project memory are what make AI-assisted development effective at scale.
+
 ## Known Limitations
 
 - **Single workspace only** -- Panoptisana uses the first workspace returned by the Asana API. Multi-workspace support is on the [roadmap](ROADMAP.md).
