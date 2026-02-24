@@ -172,4 +172,4 @@ This project is licensed under the **GNU General Public License v3.0** -- see th
 
 ## Credits
 
-Built by [MipYip](https://github.com/avanrossum).
+Built by [Alex van Rossum](https://mipyip.com). See the [product page](https://mipyip.com/products/panoptisana) for screenshots and details.
