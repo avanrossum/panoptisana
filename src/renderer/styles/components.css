@@ -168,6 +168,10 @@
   color: var(--text-primary);
 }
 
+.search-clear-btn:active {
+  transform: translateY(-50%) scale(0.98);
+}
+
 /* ── Sort Bar ── */
 .sort-bar {
   display: flex;
