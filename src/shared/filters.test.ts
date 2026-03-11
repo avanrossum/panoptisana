@@ -136,6 +136,12 @@ describe('filterAndSortTasks', () => {
     expect(result).toHaveLength(2);
   });
 
+  it('filters by search query on task GID', () => {
+    const result = filterAndSortTasks(makeTasks(), { searchQuery: '3' });
+    expect(result).toHaveLength(1);
+    expect(result[0].gid).toBe('3');
+  });
+
   it('sorts by last modified (newest first)', () => {
     const result = filterAndSortTasks(makeTasks(), { sortBy: 'modified' });
     expect(result[0].gid).toBe('3'); // Feb 14
@@ -277,6 +283,12 @@ describe('filterAndSortProjects', () => {
     const result = filterAndSortProjects(makeProjects(), { searchQuery: 'carol' });
     expect(result).toHaveLength(1);
     expect(result[0].gid).toBe('p3');
+  });
+
+  it('filters by search on project GID', () => {
+    const result = filterAndSortProjects(makeProjects(), { searchQuery: 'p2' });
+    expect(result).toHaveLength(1);
+    expect(result[0].gid).toBe('p2');
   });
 
   it('combines membership filter and search', () => {

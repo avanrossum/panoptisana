@@ -105,7 +105,8 @@ export function filterAndSortTasks(
       const name = (t.name || '').toLowerCase();
       const assignee = (t.assignee?.name || '').toLowerCase();
       const projectNames = (t.projects || []).map(p => p.name.toLowerCase()).join(' ');
-      return name.includes(q) || assignee.includes(q) || projectNames.includes(q);
+      const gid = t.gid || '';
+      return gid.includes(q) || name.includes(q) || assignee.includes(q) || projectNames.includes(q);
     });
   }
 
@@ -155,7 +156,8 @@ export function filterAndSortProjects(
     result = result.filter(p => {
       const name = (p.name || '').toLowerCase();
       const owner = (p.owner?.name || '').toLowerCase();
-      return name.includes(q) || owner.includes(q);
+      const gid = p.gid || '';
+      return gid.includes(q) || name.includes(q) || owner.includes(q);
     });
   }
 
