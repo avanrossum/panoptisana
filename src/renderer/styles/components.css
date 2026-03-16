@@ -241,7 +241,7 @@
 .section-filter-popover {
   position: absolute;
   top: calc(100% + 4px);
-  right: 0;
+  right: -20px;
   min-width: 180px;
   max-width: 260px;
   max-height: 240px;

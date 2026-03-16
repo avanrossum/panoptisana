@@ -5,6 +5,7 @@ import fs from 'fs';
 import type { Store } from './store';
 import type { MaskedSettings, ContextMenuItem, BrowserInfo, AsanaAPILike, LinkPreview } from '../shared/types';
 import { extractTitleFromHtml } from '../shared/formatters';
+import { isSafeUrl } from '../shared/url-validation';
 
 /** Send masked settings to the main renderer so it can re-apply client-side filters */
 export function broadcastSettingsToRenderer(store: Store, getMainWindow: () => BrowserWindow | null): void {
@@ -85,7 +86,7 @@ export function registerIpcHandlers({ store, asanaApi, getMainWindow, getSetting
 
     const trimmedKey = key.trim();
 
-    // Verify the key before persisting it — use a temporary in-memory key
+    // Persist key optimistically for verification — roll back on failure
     const originalApiKey = store.getSettings().apiKey;
     const encrypted = store.encryptApiKey(trimmedKey);
     store.setSettings({ apiKey: encrypted });
@@ -413,9 +414,8 @@ export function registerIpcHandlers({ store, asanaApi, getMainWindow, getSetting
     if (cached) return cached;
 
     try {
-      // Validate URL
-      const parsed = new URL(url);
-      if (!['http:', 'https:'].includes(parsed.protocol)) return empty;
+      // Validate URL — block private/internal networks (SSRF protection)
+      if (!isSafeUrl(url)) return empty;
 
       // Fetch with 5s timeout — only need the head of the HTML for <title> and og:site_name
       const controller = new AbortController();

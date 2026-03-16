@@ -270,6 +270,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [ ] Refactor `FilterSettings` in `App.tsx` to use `Pick<Settings, ...>` instead of re-declaring the same fields — reduces drift risk when Settings interface changes
 - [ ] Add `e.stopPropagation()` to pin button click in `ProjectItem` — currently missing, parent click handlers could fire on pin toggle
 - [ ] Replace `(err as Error).message` casts with a shared `toErrorMessage()` utility
+- [ ] DRY: Abstract repetitive IPC handler try/catch patterns in `ipc-handlers.ts` — each Asana API handler has identical error logging boilerplate; consider a generic async IPC invoker wrapper (adversarial review)
 - [x] Remove `as any` casts on preload IPC event handlers — typed against `IpcEventChannelMap` (v0.5.6 code review)
 - [ ] Tighten `Settings.accentColor` from `string` to `AccentColor` union type
 - [ ] Tighten `Settings.openLinksIn` from `string` to union type (`'default' | 'asana-desktop' | string`)
@@ -281,6 +282,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 - [x] Route external URL opens through IPC + `shell.openExternal` instead of `window.open` in renderer (`TaskItem.tsx`, `ProjectList.tsx`)
 - [x] ~~Removed `executeJavaScript` string interpolation in download progress window~~ — replaced with IPC-based progress in v0.5.2
 - [x] Fix shell injection via `execSync` in `ipc-handlers.ts` — replaced with `execFile` argument array (v0.5.6 code review)
+- [x] Fix SSRF in `app:fetch-link-preview` — added `isSafeUrl()` validation to block private/internal IPs (localhost, 169.254.x.x, 10.x.x.x, 172.16-31.x.x, 192.168.x.x) before fetching URLs (v0.8.0 adversarial review)
 - [ ] Add `noopener,noreferrer` to `window.open()` call in `SettingsApp.tsx` (GitHub link)
 - [ ] Fix API key verification race condition — key is stored before verification completes; crash during verification leaves unverified key persisted. Store only on success
 

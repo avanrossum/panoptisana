@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Section filter popover -- filter button in the sort bar opens a dropdown with checkboxes for each unique section name, with task counts, Select All / None controls, and click-outside-to-dismiss. Resets when the project filter changes. Active filter shown via accent dot on the filter icon
 - Search by section name -- task search now matches against Asana section names (e.g. "In Review", "To Do") from task memberships
 
+### Fixed
+- Security: Link preview fetcher now validates URLs against private/internal IP ranges (SSRF protection) -- blocks localhost, 169.254.x.x (AWS metadata), 10.x.x.x, 172.16-31.x.x, 192.168.x.x, IPv6 private ranges, and .local/.internal TLDs
+- Misleading code comment in API key verification handler corrected to match actual behavior
+
 ### Changed
 - Project filter upgraded from single-select `<select>` dropdown to multi-select popover with search -- `selectedProjectGid` (string) replaced by `selectedProjectGids` (Set, multi-select)
 
