@@ -339,6 +339,8 @@
   min-width: 220px;
   max-width: 300px;
   max-height: 320px;
+  right: auto;
+  left: 0;
 }
 
 .project-filter-search {

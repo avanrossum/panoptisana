@@ -67,8 +67,9 @@ Dark, light, or system theme with 7 accent colors. Configurable polling interval
 - **Inbox Notifications** -- Slide-out drawer with recent activity on assigned tasks
 - **Activity Highlighting** -- Gold border on tasks with new changes
 - **Pinning** -- Pin tasks or projects to the top of the list
+- **Project Filter** -- Multi-select project filter popover with search input, checkboxes, and task counts
 - **Section Filter** -- Filter tasks by Asana section via a popover with checkboxes and task counts
-- **Smart Filtering** -- Exclude/include by name pattern, filter by user or project
+- **Smart Filtering** -- Exclude/include by name pattern, filter by user
 - **GID Surfacing** -- Copy task, project, section, and field GIDs for automation
 - **CSV Export** -- Export section and field data from projects
 - **Right-Click Context Menu** -- Exclude, pin, copy GID/URL
