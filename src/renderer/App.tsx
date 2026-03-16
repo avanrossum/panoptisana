@@ -223,14 +223,23 @@ export default function App() {
     [projects, filterSettings]
   );
 
+  // Set of non-archived project GIDs — used to exclude archived projects from the
+  // task-based project popover. The cached `projects` array is fetched with archived=false,
+  // but tasks can still reference archived projects via their projects[] array.
+  const activeProjectGids = useMemo(() =>
+    new Set(projects.map(p => p.gid)),
+    [projects]
+  );
+
   // Build sorted project list with task counts from filtered tasks for the project filter popover.
   // Uses projects referenced on tasks (not the Projects tab data) so the
   // filter only shows projects that actually have incomplete tasks.
+  // Excludes archived projects by checking against the active projects set.
   const taskProjects = useMemo(() => {
     const map = new Map<string, { name: string; count: number }>();
     for (const task of filteredTasks) {
       for (const p of task.projects || []) {
-        if (p.gid && p.name) {
+        if (p.gid && p.name && activeProjectGids.has(p.gid)) {
           const existing = map.get(p.gid);
           if (existing) {
             existing.count++;
@@ -243,7 +252,7 @@ export default function App() {
     return Array.from(map.entries())
       .map(([gid, { name, count }]) => ({ gid, name, count }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [filteredTasks]);
+  }, [filteredTasks, activeProjectGids]);
 
   // Count of tasks visible after project + section filters (before search/sort in TaskList)
   const visibleTaskCount = useMemo(() => {

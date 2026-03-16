@@ -5,16 +5,19 @@ All notable changes to Panoptisana will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1] - 2026-03-16
+
+### Fixed
+- Archived projects no longer appear in the project filter popover -- task project references are now cross-referenced against the active (non-archived) project cache
+- Security: Link preview fetcher validates URLs against private/internal IP ranges (SSRF protection) -- blocks localhost, 169.254.x.x (AWS metadata), 10.x.x.x, 172.16-31.x.x, 192.168.x.x, IPv6 private ranges, and .local/.internal TLDs
+- Misleading code comment in API key verification handler corrected to match actual behavior
+
 ## [0.8.0] - 2026-03-18
 
 ### Added
 - Project filter popover -- replaces the single-select project dropdown with a multi-select popover featuring checkboxes, task counts per project, a search input for finding projects, and All/None controls. Active filter shown via accent dot on the folder icon
 - Section filter popover -- filter button in the sort bar opens a dropdown with checkboxes for each unique section name, with task counts, Select All / None controls, and click-outside-to-dismiss. Resets when the project filter changes. Active filter shown via accent dot on the filter icon
 - Search by section name -- task search now matches against Asana section names (e.g. "In Review", "To Do") from task memberships
-
-### Fixed
-- Security: Link preview fetcher now validates URLs against private/internal IP ranges (SSRF protection) -- blocks localhost, 169.254.x.x (AWS metadata), 10.x.x.x, 172.16-31.x.x, 192.168.x.x, IPv6 private ranges, and .local/.internal TLDs
-- Misleading code comment in API key verification handler corrected to match actual behavior
 
 ### Changed
 - Project filter upgraded from single-select `<select>` dropdown to multi-select popover with search -- `selectedProjectGid` (string) replaced by `selectedProjectGids` (Set, multi-select)
