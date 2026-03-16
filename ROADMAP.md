@@ -4,10 +4,14 @@
 
 Open-source Asana task and project visibility tool for macOS. Displays a searchable list of incomplete tasks and active projects with comment tracking and auto-updates.
 
-## Current Version: 0.7.3
+## Current Version: 0.8.0
 
-### v0.7.3 Additions
+### v0.8.0 Additions
+- [x] Section filter popover -- filter tasks by section name via checkbox dropdown
 - [x] Search by section name in task search
+
+### v0.7.3
+- Rolled into v0.8.0
 
 ### v0.7.2 Fixes
 - [x] Fix search clear button click target dropping on press

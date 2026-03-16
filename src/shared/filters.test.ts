@@ -146,6 +146,56 @@ describe('filterAndSortTasks', () => {
     expect(result.map(t => t.gid).sort()).toEqual(['2', '4']);
   });
 
+  // ── Section name filter ─────────────────────────────────────
+
+  it('filters by selected section names', () => {
+    const result = filterAndSortTasks(makeTasks(), {
+      selectedSectionNames: new Set(['In Review'])
+    });
+    expect(result).toHaveLength(2);
+    expect(result.map(t => t.gid).sort()).toEqual(['2', '4']);
+  });
+
+  it('passes all tasks when selectedSectionNames is undefined', () => {
+    const result = filterAndSortTasks(makeTasks(), {});
+    expect(result).toHaveLength(4);
+  });
+
+  it('returns no tasks when selectedSectionNames is empty set', () => {
+    const result = filterAndSortTasks(makeTasks(), {
+      selectedSectionNames: new Set()
+    });
+    expect(result).toHaveLength(0); // empty set = match nothing
+  });
+
+  it('combines section filter with project filter', () => {
+    const result = filterAndSortTasks(makeTasks(), {
+      selectedProjectGid: 'p1',
+      selectedSectionNames: new Set(['In Progress'])
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0].gid).toBe('1');
+  });
+
+  it('combines section filter with search', () => {
+    const result = filterAndSortTasks(makeTasks(), {
+      selectedSectionNames: new Set(['In Review']),
+      searchQuery: 'design'
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0].gid).toBe('2');
+  });
+
+  it('handles tasks with no memberships gracefully in section filter', () => {
+    const tasks = makeTasks();
+    tasks[0].memberships = undefined;
+    const result = filterAndSortTasks(tasks, {
+      selectedSectionNames: new Set(['In Progress'])
+    });
+    // Task 1 has no memberships now, so it shouldn't match
+    expect(result.find(t => t.gid === '1')).toBeUndefined();
+  });
+
   it('filters by search query on task GID', () => {
     const result = filterAndSortTasks(makeTasks(), { searchQuery: '3' });
     expect(result).toHaveLength(1);

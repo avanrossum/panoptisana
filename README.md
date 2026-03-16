@@ -16,7 +16,7 @@ Asana's web app is built for project management. Panoptisana is built for projec
 
 ### Task List
 
-Searchable, sortable list of all incomplete tasks. Filter by project, user, or name pattern. Pin important tasks to the top. Complete tasks directly from the list. Activity highlighting marks tasks with new changes since you last looked.
+Searchable, sortable list of all incomplete tasks. Filter by project, section, user, or name pattern. Search matches task names, assignees, project names, section names, and GIDs. Pin important tasks to the top. Complete tasks directly from the list. Activity highlighting marks tasks with new changes since you last looked.
 
 <p align="center">
   <img src="screenshots/task-list-short.png" alt="Task list with activity highlighting and quick actions" width="380" />
@@ -67,6 +67,7 @@ Dark, light, or system theme with 7 accent colors. Configurable polling interval
 - **Inbox Notifications** -- Slide-out drawer with recent activity on assigned tasks
 - **Activity Highlighting** -- Gold border on tasks with new changes
 - **Pinning** -- Pin tasks or projects to the top of the list
+- **Section Filter** -- Filter tasks by Asana section via a popover with checkboxes and task counts
 - **Smart Filtering** -- Exclude/include by name pattern, filter by user or project
 - **GID Surfacing** -- Copy task, project, section, and field GIDs for automation
 - **CSV Export** -- Export section and field data from projects

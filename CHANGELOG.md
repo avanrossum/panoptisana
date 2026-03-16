@@ -5,10 +5,14 @@ All notable changes to Panoptisana will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.7.3] - 2026-03-18
+## [0.8.0] - 2026-03-18
 
 ### Added
+- Section filter popover -- filter button in the sort bar opens a dropdown with checkboxes for each unique section name, with task counts, Select All / None controls, and click-outside-to-dismiss. Resets when the project dropdown changes. Active filter shown via accent dot on the filter icon
 - Search by section name -- task search now matches against Asana section names (e.g. "In Review", "To Do") from task memberships
+- `SectionFilterPopover` component with click-outside and Escape dismissal
+- `filter` icon (MDI filter-variant) added to icon set
+- `selectedSectionNames` filter option in `filterAndSortTasks()` -- `undefined` = no filter, empty `Set` = match nothing, `Set` with names = only those sections
 
 ## [0.7.2] - 2026-03-11
 

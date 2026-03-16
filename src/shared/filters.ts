@@ -32,6 +32,7 @@ interface TaskFilterOptions {
   searchQuery?: string;
   sortBy?: SortBy;
   selectedProjectGid?: string;
+  selectedSectionNames?: Set<string>;
   pinnedGids?: string[];
 }
 
@@ -87,7 +88,7 @@ export function applyItemFilters(
  */
 export function filterAndSortTasks(
   tasks: AsanaTask[],
-  { searchQuery, sortBy, selectedProjectGid, pinnedGids }: TaskFilterOptions = {}
+  { searchQuery, sortBy, selectedProjectGid, selectedSectionNames, pinnedGids }: TaskFilterOptions = {}
 ): AsanaTask[] {
   let result = [...tasks];
 
@@ -96,6 +97,18 @@ export function filterAndSortTasks(
     result = result.filter(t =>
       (t.projects || []).some(p => p.gid === selectedProjectGid)
     );
+  }
+
+  // Filter by section names (undefined = no filter, empty Set = match nothing)
+  if (selectedSectionNames !== undefined) {
+    if (selectedSectionNames.size === 0) {
+      result = [];
+    } else {
+      result = result.filter(t => {
+        const sections = (t.memberships || []).map(m => m.section?.name).filter(Boolean) as string[];
+        return sections.some(name => selectedSectionNames.has(name));
+      });
+    }
   }
 
   // Filter by search

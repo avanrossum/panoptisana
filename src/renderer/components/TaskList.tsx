@@ -10,6 +10,7 @@ interface TaskListProps {
   searchQuery: string;
   sortBy: SortBy;
   selectedProjectGid: string;
+  selectedSectionNames: Set<string> | null;
   seenTimestamps: Record<string, string>;
   onComplete: (taskGid: string) => void;
   pinnedGids: string[];
@@ -19,10 +20,11 @@ interface TaskListProps {
 
 // ── Component ───────────────────────────────────────────────────
 
-export default function TaskList({ tasks, searchQuery, sortBy, selectedProjectGid, seenTimestamps, onComplete, pinnedGids, onTogglePin, onOpenDetail }: TaskListProps) {
+export default function TaskList({ tasks, searchQuery, sortBy, selectedProjectGid, selectedSectionNames, seenTimestamps, onComplete, pinnedGids, onTogglePin, onOpenDetail }: TaskListProps) {
+  const sectionFilter = selectedSectionNames ?? undefined;
   const filteredAndSorted = useMemo(() =>
-    filterAndSortTasks(tasks, { searchQuery, sortBy, selectedProjectGid, pinnedGids }),
-    [tasks, searchQuery, sortBy, selectedProjectGid, pinnedGids]
+    filterAndSortTasks(tasks, { searchQuery, sortBy, selectedProjectGid, selectedSectionNames: sectionFilter, pinnedGids }),
+    [tasks, searchQuery, sortBy, selectedProjectGid, sectionFilter, pinnedGids]
   );
 
   const pinnedSet = useMemo(() => new Set(pinnedGids), [pinnedGids]);
