@@ -105,8 +105,9 @@ export function filterAndSortTasks(
       const name = (t.name || '').toLowerCase();
       const assignee = (t.assignee?.name || '').toLowerCase();
       const projectNames = (t.projects || []).map(p => p.name.toLowerCase()).join(' ');
+      const sectionNames = (t.memberships || []).map(m => m.section?.name || '').join(' ').toLowerCase();
       const gid = t.gid || '';
-      return gid.includes(q) || name.includes(q) || assignee.includes(q) || projectNames.includes(q);
+      return gid.includes(q) || name.includes(q) || assignee.includes(q) || projectNames.includes(q) || sectionNames.includes(q);
     });
   }
 

@@ -10,6 +10,7 @@ const makeTasks = (): AsanaTask[] => [
     gid: '1', name: 'Fix login bug', completed: false,
     assignee: { name: 'Alice', gid: 'u1' },
     projects: [{ gid: 'p1', name: 'Backend' }],
+    memberships: [{ project: { gid: 'p1' }, section: { gid: 's1', name: 'In Progress' } }],
     modified_at: '2026-02-10T10:00:00Z', due_on: '2026-02-15', due_at: null,
     created_at: '2026-01-01T00:00:00Z'
   },
@@ -17,6 +18,7 @@ const makeTasks = (): AsanaTask[] => [
     gid: '2', name: 'Design homepage', completed: false,
     assignee: { name: 'Bob', gid: 'u2' },
     projects: [{ gid: 'p2', name: 'Frontend' }],
+    memberships: [{ project: { gid: 'p2' }, section: { gid: 's2', name: 'In Review' } }],
     modified_at: '2026-02-12T10:00:00Z', due_on: '2026-02-20', due_at: null,
     created_at: '2026-01-15T00:00:00Z'
   },
@@ -24,6 +26,7 @@ const makeTasks = (): AsanaTask[] => [
     gid: '3', name: 'Write tests', completed: false,
     assignee: { name: 'Alice', gid: 'u1' },
     projects: [{ gid: 'p1', name: 'Backend' }],
+    memberships: [{ project: { gid: 'p1' }, section: { gid: 's3', name: 'To Do' } }],
     modified_at: '2026-02-14T10:00:00Z', due_on: null, due_at: null,
     created_at: '2026-02-01T00:00:00Z'
   },
@@ -31,6 +34,7 @@ const makeTasks = (): AsanaTask[] => [
     gid: '4', name: 'Update README', completed: false,
     assignee: null,
     projects: [{ gid: 'p2', name: 'Frontend' }],
+    memberships: [{ project: { gid: 'p2' }, section: { gid: 's2', name: 'In Review' } }],
     modified_at: '2026-02-08T10:00:00Z', due_on: '2026-02-10', due_at: null,
     created_at: '2026-01-20T00:00:00Z'
   }
@@ -134,6 +138,12 @@ describe('filterAndSortTasks', () => {
   it('filters by search query on project name', () => {
     const result = filterAndSortTasks(makeTasks(), { searchQuery: 'frontend' });
     expect(result).toHaveLength(2);
+  });
+
+  it('filters by search query on section name', () => {
+    const result = filterAndSortTasks(makeTasks(), { searchQuery: 'in review' });
+    expect(result).toHaveLength(2);
+    expect(result.map(t => t.gid).sort()).toEqual(['2', '4']);
   });
 
   it('filters by search query on task GID', () => {
