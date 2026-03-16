@@ -119,7 +119,7 @@ describe('filterAndSortTasks', () => {
   });
 
   it('filters by project GID', () => {
-    const result = filterAndSortTasks(makeTasks(), { selectedProjectGid: 'p1' });
+    const result = filterAndSortTasks(makeTasks(), { selectedProjectGids: new Set(['p1']) });
     expect(result).toHaveLength(2);
     expect(result.every(t => t.projects!.some(p => p.gid === 'p1'))).toBe(true);
   });
@@ -170,7 +170,7 @@ describe('filterAndSortTasks', () => {
 
   it('combines section filter with project filter', () => {
     const result = filterAndSortTasks(makeTasks(), {
-      selectedProjectGid: 'p1',
+      selectedProjectGids: new Set(['p1']),
       selectedSectionNames: new Set(['In Progress'])
     });
     expect(result).toHaveLength(1);
@@ -235,7 +235,7 @@ describe('filterAndSortTasks', () => {
 
   it('combines project filter and search', () => {
     const result = filterAndSortTasks(makeTasks(), {
-      selectedProjectGid: 'p1',
+      selectedProjectGids: new Set(['p1']),
       searchQuery: 'test'
     });
     expect(result).toHaveLength(1);

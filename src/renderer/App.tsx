@@ -5,6 +5,7 @@ import InboxDrawer from './components/InboxDrawer';
 import ProjectDetailPanel from './components/ProjectDetailPanel';
 import TaskDetailPanel from './components/TaskDetailPanel';
 import SectionFilterPopover from './components/SectionFilterPopover';
+import ProjectFilterPopover from './components/ProjectFilterPopover';
 import Icon from './components/Icon';
 import { ICON_PATHS } from './icons';
 import { applyTheme } from '../shared/applyTheme';
@@ -72,7 +73,8 @@ export default function App() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [cachedUsers, setCachedUsers] = useState<AsanaUser[]>([]);
   const [myProjectsOnly, setMyProjectsOnly] = useState(false);
-  const [selectedProjectGid, setSelectedProjectGid] = useState('');
+  const [selectedProjectGids, setSelectedProjectGids] = useState<Set<string> | null>(null);
+  const [projectFilterOpen, setProjectFilterOpen] = useState(false);
   const [filterSettings, setFilterSettings] = useState<FilterSettings>(EMPTY_FILTER_SETTINGS);
   const [inboxOpen, setInboxOpen] = useState(false);
   const [inboxSlideDirection, setInboxSlideDirection] = useState<'left' | 'right'>('right');
@@ -221,29 +223,37 @@ export default function App() {
     [projects, filterSettings]
   );
 
-  // Build sorted project list from filtered tasks for the project filter dropdown.
+  // Build sorted project list with task counts from filtered tasks for the project filter popover.
   // Uses projects referenced on tasks (not the Projects tab data) so the
-  // dropdown only shows projects that actually have incomplete tasks.
+  // filter only shows projects that actually have incomplete tasks.
   const taskProjects = useMemo(() => {
-    const map = new Map<string, string>();
+    const map = new Map<string, { name: string; count: number }>();
     for (const task of filteredTasks) {
       for (const p of task.projects || []) {
-        if (p.gid && p.name && !map.has(p.gid)) {
-          map.set(p.gid, p.name);
+        if (p.gid && p.name) {
+          const existing = map.get(p.gid);
+          if (existing) {
+            existing.count++;
+          } else {
+            map.set(p.gid, { name: p.name, count: 1 });
+          }
         }
       }
     }
     return Array.from(map.entries())
-      .map(([gid, name]) => ({ gid, name }))
+      .map(([gid, { name, count }]) => ({ gid, name, count }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [filteredTasks]);
 
   // Count of tasks visible after project + section filters (before search/sort in TaskList)
   const visibleTaskCount = useMemo(() => {
     let pool = filteredTasks;
-    if (selectedProjectGid) {
+    if (selectedProjectGids !== null) {
+      if (selectedProjectGids.size === 0) {
+        return 0;
+      }
       pool = pool.filter(t =>
-        (t.projects || []).some(p => p.gid === selectedProjectGid)
+        (t.projects || []).some(p => selectedProjectGids.has(p.gid))
       );
     }
     if (selectedSections !== null) {
@@ -256,7 +266,7 @@ export default function App() {
       });
     }
     return pool.length;
-  }, [filteredTasks, selectedProjectGid, selectedSections]);
+  }, [filteredTasks, selectedProjectGids, selectedSections]);
 
   // Count of projects visible after membership + search filters
   const visibleProjectCount = useMemo(() => {
@@ -280,9 +290,10 @@ export default function App() {
   // Derive unique section names with counts from tasks (after project filter, before section filter)
   const availableSections = useMemo(() => {
     let pool = filteredTasks;
-    if (selectedProjectGid) {
+    if (selectedProjectGids !== null) {
+      if (selectedProjectGids.size === 0) return [];
       pool = pool.filter(t =>
-        (t.projects || []).some(p => p.gid === selectedProjectGid)
+        (t.projects || []).some(p => selectedProjectGids.has(p.gid))
       );
     }
     const counts = new Map<string, number>();
@@ -295,20 +306,23 @@ export default function App() {
     return Array.from(counts.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [filteredTasks, selectedProjectGid]);
+  }, [filteredTasks, selectedProjectGids]);
 
-  // Reset section filter when project changes
+  // Reset section filter when project selection changes
   useEffect(() => {
     setSelectedSections(null);
     setSectionFilterOpen(false);
-  }, [selectedProjectGid]);
+  }, [selectedProjectGids]);
 
-  // Clear project filter if the selected project no longer exists in task data
+  // Prune stale project GIDs from selection when projects disappear from task data
   useEffect(() => {
-    if (selectedProjectGid && !taskProjects.some(p => p.gid === selectedProjectGid)) {
-      setSelectedProjectGid('');
+    if (selectedProjectGids === null) return;
+    const availableGids = new Set(taskProjects.map(p => p.gid));
+    const pruned = new Set([...selectedProjectGids].filter(gid => availableGids.has(gid)));
+    if (pruned.size !== selectedProjectGids.size) {
+      setSelectedProjectGids(pruned.size === 0 ? null : pruned);
     }
-  }, [taskProjects, selectedProjectGid]);
+  }, [taskProjects, selectedProjectGids]);
 
   // Prune stale pinned GIDs that no longer exist in live data
   useEffect(() => {
@@ -499,17 +513,24 @@ export default function App() {
       {/* Sort / Filter Bar */}
       {activeTab === 'tasks' && (
         <div className="sort-bar">
-          <span className="sort-label">Project:</span>
-          <select
-            className="sort-select project-filter-select"
-            value={selectedProjectGid}
-            onChange={(e) => setSelectedProjectGid(e.target.value)}
-          >
-            <option value="">All Projects</option>
-            {taskProjects.map(p => (
-              <option key={p.gid} value={p.gid}>{p.name}</option>
-            ))}
-          </select>
+          <div className="project-filter-wrapper">
+            <button
+              className={`icon-btn section-filter-btn ${selectedProjectGids !== null ? 'active' : ''}`}
+              onClick={() => setProjectFilterOpen(prev => !prev)}
+              title="Filter by project"
+            >
+              <Icon path={ICON_PATHS.folder} size={14} />
+              {selectedProjectGids !== null && <span className="section-filter-dot" />}
+            </button>
+            {projectFilterOpen && (
+              <ProjectFilterPopover
+                projects={taskProjects}
+                selectedProjectGids={selectedProjectGids}
+                onSelectionChange={setSelectedProjectGids}
+                onClose={() => setProjectFilterOpen(false)}
+              />
+            )}
+          </div>
           <span className="sort-divider" />
           <span className="sort-label">Sort:</span>
           <select
@@ -579,7 +600,7 @@ export default function App() {
             tasks={filteredTasks}
             searchQuery={searchQuery}
             sortBy={sortBy}
-            selectedProjectGid={selectedProjectGid}
+            selectedProjectGids={selectedProjectGids}
             selectedSectionNames={selectedSections}
             seenTimestamps={seenTimestamps}
             onComplete={handleCompleteTask}

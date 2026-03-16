@@ -9,7 +9,7 @@ interface TaskListProps {
   tasks: AsanaTask[];
   searchQuery: string;
   sortBy: SortBy;
-  selectedProjectGid: string;
+  selectedProjectGids: Set<string> | null;
   selectedSectionNames: Set<string> | null;
   seenTimestamps: Record<string, string>;
   onComplete: (taskGid: string) => void;
@@ -20,24 +20,26 @@ interface TaskListProps {
 
 // ── Component ───────────────────────────────────────────────────
 
-export default function TaskList({ tasks, searchQuery, sortBy, selectedProjectGid, selectedSectionNames, seenTimestamps, onComplete, pinnedGids, onTogglePin, onOpenDetail }: TaskListProps) {
+export default function TaskList({ tasks, searchQuery, sortBy, selectedProjectGids, selectedSectionNames, seenTimestamps, onComplete, pinnedGids, onTogglePin, onOpenDetail }: TaskListProps) {
+  const projectFilter = selectedProjectGids ?? undefined;
   const sectionFilter = selectedSectionNames ?? undefined;
   const filteredAndSorted = useMemo(() =>
-    filterAndSortTasks(tasks, { searchQuery, sortBy, selectedProjectGid, selectedSectionNames: sectionFilter, pinnedGids }),
-    [tasks, searchQuery, sortBy, selectedProjectGid, sectionFilter, pinnedGids]
+    filterAndSortTasks(tasks, { searchQuery, sortBy, selectedProjectGids: projectFilter, selectedSectionNames: sectionFilter, pinnedGids }),
+    [tasks, searchQuery, sortBy, projectFilter, sectionFilter, pinnedGids]
   );
 
   const pinnedSet = useMemo(() => new Set(pinnedGids), [pinnedGids]);
+  const hasActiveFilters = selectedProjectGids !== null || selectedSectionNames !== null;
 
   if (filteredAndSorted.length === 0 && tasks.length > 0) {
     return (
       <div className="empty-state">
         <div className="empty-state-title">No matching tasks</div>
         <div className="empty-state-text">
-          {selectedProjectGid && searchQuery
-            ? 'Try a different search term or project.'
-            : selectedProjectGid
-              ? 'No tasks in this project.'
+          {hasActiveFilters && searchQuery
+            ? 'Try a different search term or adjust filters.'
+            : hasActiveFilters
+              ? 'No tasks match the current filters.'
               : 'Try a different search term.'}
         </div>
       </div>

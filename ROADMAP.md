@@ -7,6 +7,7 @@ Open-source Asana task and project visibility tool for macOS. Displays a searcha
 ## Current Version: 0.8.0
 
 ### v0.8.0 Additions
+- [x] Project filter popover with search -- multi-select project filter with search input
 - [x] Section filter popover -- filter tasks by section name via checkbox dropdown
 - [x] Search by section name in task search
 

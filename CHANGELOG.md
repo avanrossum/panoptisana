@@ -8,11 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.8.0] - 2026-03-18
 
 ### Added
-- Section filter popover -- filter button in the sort bar opens a dropdown with checkboxes for each unique section name, with task counts, Select All / None controls, and click-outside-to-dismiss. Resets when the project dropdown changes. Active filter shown via accent dot on the filter icon
+- Project filter popover -- replaces the single-select project dropdown with a multi-select popover featuring checkboxes, task counts per project, a search input for finding projects, and All/None controls. Active filter shown via accent dot on the folder icon
+- Section filter popover -- filter button in the sort bar opens a dropdown with checkboxes for each unique section name, with task counts, Select All / None controls, and click-outside-to-dismiss. Resets when the project filter changes. Active filter shown via accent dot on the filter icon
 - Search by section name -- task search now matches against Asana section names (e.g. "In Review", "To Do") from task memberships
-- `SectionFilterPopover` component with click-outside and Escape dismissal
-- `filter` icon (MDI filter-variant) added to icon set
-- `selectedSectionNames` filter option in `filterAndSortTasks()` -- `undefined` = no filter, empty `Set` = match nothing, `Set` with names = only those sections
+
+### Changed
+- Project filter upgraded from single-select `<select>` dropdown to multi-select popover with search -- `selectedProjectGid` (string) replaced by `selectedProjectGids` (Set, multi-select)
 
 ## [0.7.2] - 2026-03-11
 

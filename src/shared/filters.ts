@@ -31,7 +31,7 @@ function applyPinnedPartition<T extends GidItem>(items: T[], pinnedGids?: string
 interface TaskFilterOptions {
   searchQuery?: string;
   sortBy?: SortBy;
-  selectedProjectGid?: string;
+  selectedProjectGids?: Set<string>;
   selectedSectionNames?: Set<string>;
   pinnedGids?: string[];
 }
@@ -88,15 +88,19 @@ export function applyItemFilters(
  */
 export function filterAndSortTasks(
   tasks: AsanaTask[],
-  { searchQuery, sortBy, selectedProjectGid, selectedSectionNames, pinnedGids }: TaskFilterOptions = {}
+  { searchQuery, sortBy, selectedProjectGids, selectedSectionNames, pinnedGids }: TaskFilterOptions = {}
 ): AsanaTask[] {
   let result = [...tasks];
 
-  // Filter by project
-  if (selectedProjectGid) {
-    result = result.filter(t =>
-      (t.projects || []).some(p => p.gid === selectedProjectGid)
-    );
+  // Filter by project(s) (undefined = no filter, empty Set = match nothing)
+  if (selectedProjectGids !== undefined) {
+    if (selectedProjectGids.size === 0) {
+      result = [];
+    } else {
+      result = result.filter(t =>
+        (t.projects || []).some(p => selectedProjectGids.has(p.gid))
+      );
+    }
   }
 
   // Filter by section names (undefined = no filter, empty Set = match nothing)
