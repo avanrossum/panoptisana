@@ -5,6 +5,15 @@ All notable changes to Panoptisana will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.2] - 2026-03-30
+
+### Added
+- Custom field option GIDs in fields CSV export -- enum and multi-enum fields now include rows for each option value with Name, Type (enum_option), GID, and Parent GID columns
+
+### Changed
+- Export CSV button moved from bottom of sections/fields list to the tab bar for better discoverability
+- Added visual separation between tab bar and content in sections/fields panel
+
 ## [0.8.1] - 2026-03-16
 
 ### Fixed

@@ -20,9 +20,18 @@ export function buildSectionsCsv(sections: AsanaSection[]): string {
   return [header, ...rows].join('\n');
 }
 
-/** Build a CSV string from an array of fields (Name, Type, GID columns). */
+/** Build a CSV string from an array of fields (Name, Type, GID, Parent GID columns).
+ *  Enum/multi-enum fields are followed by rows for each option value. */
 export function buildFieldsCsv(fields: AsanaField[]): string {
-  const header = 'Name,Type,GID';
-  const rows = fields.map(f => `${escapeCsvField(f.name)},${escapeCsvField(f.type)},${f.gid}`);
+  const header = 'Name,Type,GID,Parent GID';
+  const rows: string[] = [];
+  for (const f of fields) {
+    rows.push(`${escapeCsvField(f.name)},${escapeCsvField(f.type)},${f.gid},`);
+    if (f.enum_options) {
+      for (const opt of f.enum_options) {
+        rows.push(`${escapeCsvField(opt.name)},enum_option,${opt.gid},${f.gid}`);
+      }
+    }
+  }
   return [header, ...rows].join('\n');
 }

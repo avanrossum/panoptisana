@@ -237,9 +237,17 @@ export class DemoAsanaAPI implements AsanaAPILike {
 
   async getProjectFields(_projectGid: string): Promise<AsanaField[]> {
     return [
-      { gid: '7000000000000001', name: 'Priority', type: 'enum' },
+      { gid: '7000000000000001', name: 'Priority', type: 'enum', enum_options: [
+        { gid: '7000000000000101', name: 'High', enabled: true, color: 'red' },
+        { gid: '7000000000000102', name: 'Medium', enabled: true, color: 'orange' },
+        { gid: '7000000000000103', name: 'Low', enabled: true, color: 'green' },
+      ] },
       { gid: '7000000000000002', name: 'Story Points', type: 'number' },
-      { gid: '7000000000000003', name: 'Sprint', type: 'enum' },
+      { gid: '7000000000000003', name: 'Sprint', type: 'enum', enum_options: [
+        { gid: '7000000000000301', name: 'Sprint 1', enabled: true, color: 'blue' },
+        { gid: '7000000000000302', name: 'Sprint 2', enabled: true, color: 'blue' },
+        { gid: '7000000000000303', name: 'Sprint 3', enabled: false, color: 'blue' },
+      ] },
       { gid: '7000000000000004', name: 'Due Date Override', type: 'date' },
     ];
   }

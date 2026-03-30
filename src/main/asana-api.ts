@@ -5,7 +5,7 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 import type {
-  AsanaTask, AsanaProject, AsanaUser, AsanaComment, AsanaStory, AsanaSection, AsanaField,
+  AsanaTask, AsanaProject, AsanaUser, AsanaComment, AsanaStory, AsanaSection, AsanaField, AsanaFieldOption,
   AsanaWorkspace, AsanaAttachment, AsanaDependency, AsanaSectionTask, VerifyApiKeyResult, InboxNotification,
   TaskDetail, ProjectDetail, AsanaSubtask,
   PollCallback, PollStartedCallback
@@ -232,13 +232,18 @@ export class AsanaAPI {
   }
 
   async getProjectFields(projectGid: string): Promise<AsanaField[]> {
-    const fields = 'custom_fields.name,custom_fields.type';
-    const result = await this._fetch<{ custom_fields?: { gid: string; name: string; type: string }[] }[]>(
+    const fields = 'custom_fields.name,custom_fields.type,custom_fields.enum_options.name,custom_fields.enum_options.enabled,custom_fields.enum_options.color';
+    const result = await this._fetch<{ custom_fields?: { gid: string; name: string; type: string; enum_options?: AsanaFieldOption[] }[] }[]>(
       `/tasks?project=${projectGid}&opt_fields=${fields}&limit=1`
     );
     const task = Array.isArray(result.data) ? result.data[0] : null;
     if (!task || !task.custom_fields) return [];
-    return task.custom_fields.map(cf => ({ gid: cf.gid, name: cf.name, type: cf.type }));
+    return task.custom_fields.map(cf => ({
+      gid: cf.gid,
+      name: cf.name,
+      type: cf.type,
+      ...(cf.enum_options ? { enum_options: cf.enum_options } : {}),
+    }));
   }
 
   async getProjectDetail(projectGid: string): Promise<ProjectDetail> {

@@ -30,3 +30,6 @@ builder-effective-config.yaml
 # Proprietary / session docs
 CLAUDE.md
 ARCHITECTURE.md
+
+# Project memory (generated)
+.memory/

@@ -71,15 +71,15 @@ describe('buildSectionsCsv', () => {
 
 describe('buildFieldsCsv', () => {
   it('returns header only for empty array', () => {
-    expect(buildFieldsCsv([])).toBe('Name,Type,GID');
+    expect(buildFieldsCsv([])).toBe('Name,Type,GID,Parent GID');
   });
 
-  it('builds CSV with one field', () => {
+  it('builds CSV with one field without options', () => {
     const fields = [{ gid: '456', name: 'Priority', type: 'enum' }];
-    expect(buildFieldsCsv(fields)).toBe('Name,Type,GID\nPriority,enum,456');
+    expect(buildFieldsCsv(fields)).toBe('Name,Type,GID,Parent GID\nPriority,enum,456,');
   });
 
-  it('builds CSV with multiple fields', () => {
+  it('builds CSV with multiple fields without options', () => {
     const fields = [
       { gid: '10', name: 'Priority', type: 'enum' },
       { gid: '20', name: 'Story Points', type: 'number' },
@@ -88,19 +88,52 @@ describe('buildFieldsCsv', () => {
     const csv = buildFieldsCsv(fields);
     const lines = csv.split('\n');
     expect(lines).toHaveLength(4);
-    expect(lines[0]).toBe('Name,Type,GID');
-    expect(lines[1]).toBe('Priority,enum,10');
-    expect(lines[2]).toBe('Story Points,number,20');
-    expect(lines[3]).toBe('Sprint,enum,30');
+    expect(lines[0]).toBe('Name,Type,GID,Parent GID');
+    expect(lines[1]).toBe('Priority,enum,10,');
+    expect(lines[2]).toBe('Story Points,number,20,');
+    expect(lines[3]).toBe('Sprint,enum,30,');
+  });
+
+  it('includes enum option rows with parent GID', () => {
+    const fields = [{ gid: '10', name: 'Priority', type: 'enum', enum_options: [
+      { gid: '101', name: 'High', enabled: true, color: 'red' },
+      { gid: '102', name: 'Low', enabled: true, color: 'green' },
+    ] }];
+    const csv = buildFieldsCsv(fields);
+    const lines = csv.split('\n');
+    expect(lines).toHaveLength(4);
+    expect(lines[0]).toBe('Name,Type,GID,Parent GID');
+    expect(lines[1]).toBe('Priority,enum,10,');
+    expect(lines[2]).toBe('High,enum_option,101,10');
+    expect(lines[3]).toBe('Low,enum_option,102,10');
+  });
+
+  it('mixes fields with and without options', () => {
+    const fields = [
+      { gid: '10', name: 'Priority', type: 'enum', enum_options: [
+        { gid: '101', name: 'High', enabled: true, color: 'red' },
+      ] },
+      { gid: '20', name: 'Points', type: 'number' },
+    ];
+    const csv = buildFieldsCsv(fields);
+    const lines = csv.split('\n');
+    expect(lines).toHaveLength(4);
+    expect(lines[1]).toBe('Priority,enum,10,');
+    expect(lines[2]).toBe('High,enum_option,101,10');
+    expect(lines[3]).toBe('Points,number,20,');
   });
 
   it('escapes field names containing commas', () => {
     const fields = [{ gid: '777', name: 'Cost, Estimate', type: 'number' }];
-    expect(buildFieldsCsv(fields)).toBe('Name,Type,GID\n"Cost, Estimate",number,777');
+    expect(buildFieldsCsv(fields)).toBe('Name,Type,GID,Parent GID\n"Cost, Estimate",number,777,');
   });
 
-  it('escapes field type containing special characters', () => {
-    const fields = [{ gid: '666', name: 'Notes', type: 'multi_enum' }];
-    expect(buildFieldsCsv(fields)).toBe('Name,Type,GID\nNotes,multi_enum,666');
+  it('escapes option names containing commas', () => {
+    const fields = [{ gid: '10', name: 'Status', type: 'enum', enum_options: [
+      { gid: '101', name: 'Done, Verified', enabled: true, color: 'green' },
+    ] }];
+    const csv = buildFieldsCsv(fields);
+    const lines = csv.split('\n');
+    expect(lines[2]).toBe('"Done, Verified",enum_option,101,10');
   });
 });

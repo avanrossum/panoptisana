@@ -258,6 +258,12 @@ function ProjectItem({ project, isPinned, onTogglePin, onOpenDetail }: ProjectIt
             >
               Fields
             </button>
+            <button
+              className="task-btn secondary detail-tab-export"
+              onClick={activeTab === 'sections' ? handleExportSectionsCsv : handleExportFieldsCsv}
+            >
+              Export CSV
+            </button>
           </div>
 
           {/* Sections tab */}
@@ -278,11 +284,6 @@ function ProjectItem({ project, isPinned, onTogglePin, onOpenDetail }: ProjectIt
                       </button>
                     </div>
                   ))}
-                  <div className="detail-panel-footer">
-                    <button className="task-btn secondary" onClick={handleExportSectionsCsv}>
-                      Export CSV
-                    </button>
-                  </div>
                 </>
               ) : (
                 <div className="comments-loading">No sections found.</div>
@@ -309,11 +310,6 @@ function ProjectItem({ project, isPinned, onTogglePin, onOpenDetail }: ProjectIt
                       </button>
                     </div>
                   ))}
-                  <div className="detail-panel-footer">
-                    <button className="task-btn secondary" onClick={handleExportFieldsCsv}>
-                      Export CSV
-                    </button>
-                  </div>
                 </>
               ) : (
                 <div className="comments-loading">No fields found.</div>

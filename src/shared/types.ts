@@ -120,10 +120,18 @@ export interface AsanaSection {
   name: string;
 }
 
+export interface AsanaFieldOption {
+  gid: string;
+  name: string;
+  enabled: boolean;
+  color: string;
+}
+
 export interface AsanaField {
   gid: string;
   name: string;
   type: string;
+  enum_options?: AsanaFieldOption[];
 }
 
 export interface ProjectDetail {
